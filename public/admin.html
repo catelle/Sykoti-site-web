@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="robots" content="noindex, nofollow" />
+    <title>SykotiCenter Admin</title>
+    <style>
+      :root {
+        --rose: #a72e5c;
+        --dark: #101014;
+        --muted: #666672;
+        --line: rgba(16, 16, 20, 0.1);
+        --soft: #f8f6f7;
+        --white: #fff;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        font-family: Inter, Arial, sans-serif;
+        color: var(--dark);
+        background: var(--soft);
+      }
+
+      header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 16px;
+        padding: 22px clamp(18px, 5vw, 72px);
+        color: var(--white);
+        background: var(--dark);
+      }
+
+      main {
+        display: grid;
+        grid-template-columns: 280px 1fr;
+        gap: 22px;
+        padding: 24px clamp(18px, 5vw, 72px);
+      }
+
+      aside,
+      section,
+      form,
+      article {
+        border: 1px solid var(--line);
+        border-radius: 14px;
+        background: var(--white);
+      }
+
+      aside,
+      section {
+        padding: 18px;
+      }
+
+      nav {
+        display: grid;
+        gap: 8px;
+      }
+
+      button {
+        min-height: 42px;
+        border: 0;
+        border-radius: 999px;
+        cursor: pointer;
+        color: var(--dark);
+        background: #f0edf0;
+        font-weight: 700;
+      }
+
+      button.active,
+      button.primary {
+        color: var(--white);
+        background: var(--rose);
+      }
+
+      input,
+      select,
+      textarea {
+        width: 100%;
+        min-height: 44px;
+        margin-top: 6px;
+        padding: 10px 12px;
+        border: 1px solid var(--line);
+        border-radius: 10px;
+      }
+
+      textarea {
+        min-height: 100px;
+      }
+
+      .article-form {
+        gap: 16px;
+      }
+
+      .article-form .grid {
+        grid-template-columns: 1fr;
+      }
+
+      .article-content {
+        min-height: 420px;
+        line-height: 1.65;
+      }
+
+      .article-excerpt {
+        min-height: 150px;
+      }
+
+      label {
+        display: grid;
+        color: var(--muted);
+        font-size: 0.9rem;
+        font-weight: 700;
+      }
+
+      form {
+        display: grid;
+        gap: 12px;
+        padding: 16px;
+        margin-bottom: 18px;
+      }
+
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 12px;
+      }
+
+      .items {
+        display: grid;
+        gap: 12px;
+      }
+
+      article {
+        padding: 16px;
+      }
+
+      article p {
+        color: var(--muted);
+      }
+
+      .row {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+      }
+
+      .status {
+        color: var(--rose);
+        font-weight: 700;
+      }
+
+      .status.ok {
+        color: #176b3a;
+      }
+
+      .muted {
+        color: var(--muted);
+      }
+
+      .preview {
+        width: min(180px, 100%);
+        border-radius: 10px;
+        margin: 10px 0;
+      }
+
+      @media (max-width: 840px) {
+        main {
+          grid-template-columns: 1fr;
+        }
+
+        .grid {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <div>
+        <strong>SykotiCenter Admin</strong>
+        <div>Manage reports, articles, webinars, inscriptions and support.</div>
+      </div>
+      <button id="logout">Logout</button>
+    </header>
+
+    <main>
+      <aside>
+        <form id="loginForm">
+          <h2>Admin login</h2>
+          <label>Email <input name="email" type="email" required /></label>
+          <label>Password <input name="password" type="password" required /></label>
+          <button class="primary" type="submit">Login</button>
+          <span class="status" id="loginStatus"></span>
+        </form>
+
+        <nav id="resourceNav"></nav>
+      </aside>
+
+      <section>
+        <h1 id="resourceTitle">Reports</h1>
+        <p class="status" id="resourceStatus"></p>
+        <form id="createForm"></form>
+        <div class="items" id="items"></div>
+      </section>
+    </main>
+
+    <script>
+      const API = window.location.origin.includes('517')
+        ? 'http://localhost:4000/api'
+        : `${window.location.origin}/api`
+      const API_ORIGIN = API.replace(/\/api$/, '')
+
+      const resources = {
+        reports: ['title', 'description', 'period', 'category', 'source', 'coverUrl', 'fileUrl', 'status'],
+        articles: ['title', 'slug', 'excerpt', 'content', 'category', 'coverUrl', 'status'],
+        webinars: ['title', 'description', 'scheduledAt', 'speakers', 'coverUrl', 'registrationUrl', 'status'],
+        inscriptions: [],
+        supports: [],
+      }
+
+      let token = localStorage.getItem('sykotiAdminToken') || ''
+      let active = 'reports'
+
+      const nav = document.querySelector('#resourceNav')
+      const items = document.querySelector('#items')
+      const createForm = document.querySelector('#createForm')
+      const title = document.querySelector('#resourceTitle')
+      const resourceStatus = document.querySelector('#resourceStatus')
+      const loginStatus = document.querySelector('#loginStatus')
+
+      const statusOptions = {
+        reports: ['draft', 'pending', 'published', 'archived'],
+        articles: ['draft', 'published', 'archived'],
+        webinars: ['draft', 'open', 'closed', 'archived'],
+      }
+
+      Object.keys(resources).forEach((resource) => {
+        const button = document.createElement('button')
+        button.type = 'button'
+        button.textContent = resource
+        button.onclick = () => {
+          active = resource
+          render()
+        }
+        nav.appendChild(button)
+      })
+
+      document.querySelector('#loginForm').addEventListener('submit', async (event) => {
+        event.preventDefault()
+        loginStatus.className = 'status'
+        loginStatus.textContent = 'Signing in...'
+        try {
+          const body = Object.fromEntries(new FormData(event.currentTarget))
+          const data = await apiJson(`${API}/admin/login`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(body),
+          })
+          token = data.token
+          localStorage.setItem('sykotiAdminToken', token)
+          loginStatus.className = 'status ok'
+          loginStatus.textContent = 'Logged in'
+          render()
+        } catch (error) {
+          loginStatus.textContent = error.message
+        }
+      })
+
+      document.querySelector('#logout').onclick = () => {
+        token = ''
+        localStorage.removeItem('sykotiAdminToken')
+        loginStatus.className = 'status'
+        loginStatus.textContent = 'Logged out'
+        resourceStatus.textContent = ''
+        render()
+      }
+
+      function headers() {
+        return { Authorization: `Bearer ${token}` }
+      }
+
+      async function apiJson(url, options = {}) {
+        let response
+        try {
+          response = await fetch(url, options)
+        } catch {
+          throw new Error(`API unreachable at ${API}. Start npm run server and check MongoDB Atlas network access.`)
+        }
+
+        const contentType = response.headers.get('content-type') || ''
+        const data = contentType.includes('application/json') ? await response.json() : null
+
+        if (!response.ok) {
+          throw new Error(data?.message || `Request failed with status ${response.status}`)
+        }
+
+        return data
+      }
+
+      function fieldInput(field) {
+        if (field === 'content') {
+          return `<textarea class="article-content" name="${field}" placeholder="Write the full article here. Use line breaks to separate paragraphs."></textarea>`
+        }
+        if (field === 'excerpt') {
+          return `<textarea class="article-excerpt" name="${field}" placeholder="Short article summary"></textarea>`
+        }
+        if (field === 'description') {
+          return `<textarea name="${field}" placeholder="${field}"></textarea>`
+        }
+        if (field === 'status') {
+          const options = statusOptions[active] || ['pending', 'accepted', 'closed']
+          return `<select name="${field}">${options.map((option) => `<option>${option}</option>`).join('')}</select>`
+        }
+        if (field === 'coverUrl') {
+          return `<input name="${field}" placeholder="https://example.com/image.jpg" /><input name="coverImage" type="file" accept="image/*" />`
+        }
+        if (field === 'fileUrl') {
+          return `<input name="${field}" placeholder="https://example.com/report.pdf" /><input name="file" type="file" />`
+        }
+        return `<input name="${field}" placeholder="${field}" />`
+      }
+
+      function assetUrl(url) {
+        if (!url || /^https?:\/\//.test(url)) return url
+        return `${API_ORIGIN}${url}`
+      }
+
+      function actionButtons(id) {
+        const actions = {
+          reports: [['Publish', 'published']],
+          articles: [['Publish', 'published']],
+          webinars: [['Open', 'open'], ['Close', 'closed']],
+          inscriptions: [['Review', 'reviewing'], ['Accept', 'accepted'], ['Reject', 'rejected']],
+          supports: [['Mark received', 'received'], ['Cancel', 'cancelled']],
+        }[active] || []
+
+        return [
+          ...actions.map(([label, status]) => `<button onclick="updateStatus('${id}', '${status}')">${label}</button>`),
+          `<button onclick="removeItem('${id}')">Delete</button>`,
+        ].join('')
+      }
+
+      async function render() {
+        title.textContent = active[0].toUpperCase() + active.slice(1)
+        nav.querySelectorAll('button').forEach((button) => button.classList.toggle('active', button.textContent === active))
+        resourceStatus.className = 'status'
+
+        const fields = resources[active]
+        createForm.className = active === 'articles' ? 'article-form' : ''
+        createForm.innerHTML = fields.length
+          ? `<div class="grid">${fields.map((field) => `<label>${field}${fieldInput(field)}</label>`).join('')}</div><button class="primary" type="submit">Create ${active}</button>`
+          : '<p>This resource is collected from public forms. Use item actions below to update status.</p>'
+
+        createForm.onsubmit = async (event) => {
+          event.preventDefault()
+          const form = event.currentTarget
+          resourceStatus.textContent = `Creating ${active}...`
+          const submitButton = form.querySelector('button[type="submit"]')
+          submitButton.disabled = true
+
+          try {
+            const formData = new FormData(form)
+            for (const [key, value] of [...formData.entries()]) {
+              if (value === '' || (value instanceof File && !value.name)) {
+                formData.delete(key)
+              }
+            }
+
+            await apiJson(`${API}/admin/${active}/upload`, {
+              method: 'POST',
+              headers: headers(),
+              body: formData,
+            })
+
+            form.reset()
+            resourceStatus.className = 'status ok'
+            resourceStatus.textContent = `${active[0].toUpperCase() + active.slice(1)} saved.`
+            await render()
+          } catch (error) {
+            resourceStatus.className = 'status'
+            resourceStatus.textContent = error.message
+          } finally {
+            submitButton.disabled = false
+          }
+        }
+
+        if (!token) {
+          items.innerHTML = '<p class="status">Login required.</p>'
+          return
+        }
+
+        try {
+          const data = await apiJson(`${API}/admin/${active}`, { headers: headers() })
+          items.innerHTML = data.length
+            ? data.map((item) => `
+              <article>
+                <h3>${item.title || item.fullName || item.name || item.email || item._id}</h3>
+                ${item.coverUrl ? `<img class="preview" src="${assetUrl(item.coverUrl)}" alt="" />` : ''}
+                <p>${item.description || item.excerpt || item.motivation || item.message || item.theme || ''}</p>
+                <small>Status: ${item.status || 'n/a'} / ${item.email || item.source || item.contributionType || ''}</small>
+                <div class="row">
+                  ${actionButtons(item._id)}
+                </div>
+              </article>
+            `).join('')
+            : '<p class="muted">No items yet.</p>'
+        } catch (error) {
+          items.innerHTML = `<p class="status">${error.message}</p>`
+        }
+      }
+
+      window.updateStatus = async (id, status) => {
+        try {
+          resourceStatus.textContent = 'Updating status...'
+          await apiJson(`${API}/admin/${active}/${id}`, {
+            method: 'PATCH',
+            headers: { ...headers(), 'Content-Type': 'application/json' },
+            body: JSON.stringify({ status, publishedAt: status === 'published' ? new Date().toISOString() : undefined }),
+          })
+          resourceStatus.className = 'status ok'
+          resourceStatus.textContent = 'Status updated.'
+          render()
+        } catch (error) {
+          resourceStatus.className = 'status'
+          resourceStatus.textContent = error.message
+        }
+      }
+
+      window.removeItem = async (id) => {
+        try {
+          resourceStatus.textContent = 'Deleting item...'
+          await apiJson(`${API}/admin/${active}/${id}`, { method: 'DELETE', headers: headers() })
+          resourceStatus.className = 'status ok'
+          resourceStatus.textContent = 'Item deleted.'
+          render()
+        } catch (error) {
+          resourceStatus.className = 'status'
+          resourceStatus.textContent = error.message
+        }
+      }
+
+      render()
+    </script>
+  </body>
+</html>

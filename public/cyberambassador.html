@@ -1,0 +1,1741 @@
+<!DOCTYPE html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Sykoti Cyberambassador | Literacy numerique africaine</title>
+    <meta
+      name="description"
+      content="Sykoti Cyberambassador forme les jeunes, parents et citoyens aux bons reflexes numeriques avec une communaute africaine engagee."
+    />
+    <meta name="robots" content="index, follow" />
+    <link rel="canonical" href="https://catelle.github.io/Sykoti-site-web/cyberambassador.html" />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Sykoti Cyberambassador | Literacy numerique africaine" />
+    <meta
+      property="og:description"
+      content="Formation, communaute et ressources pratiques pour developper les bons reflexes numeriques avec Sykoti Cyberambassador."
+    />
+    <meta property="og:url" content="https://catelle.github.io/Sykoti-site-web/cyberambassador.html" />
+    <meta property="og:site_name" content="SykotiCenter" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      href="https://cdn.jsdelivr.net/npm/remixicon@4.5.0/fonts/remixicon.css"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --rose: #9f2f58;
+        --rose-dark: #6f1738;
+        --rose-soft: #f5dce6;
+        --rose-muted: #c97994;
+        --black: #101014;
+        --grey-900: #17171b;
+        --grey-700: #3d3d45;
+        --grey-500: #74747d;
+        --grey-200: #ededf1;
+        --grey-100: #f7f5f6;
+        --white: #ffffff;
+        --shadow: 0 24px 70px rgba(16, 16, 20, 0.12);
+        --radius: 8px;
+        --max: 960px;
+        --text-max: 600px;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html {
+        scroll-behavior: smooth;
+      }
+
+      body {
+        margin: 0;
+        font-family: "Manrope", Arial, sans-serif;
+        color: var(--black);
+        background: var(--white);
+        line-height: 1.6;
+      }
+
+      img {
+        display: block;
+        max-width: 100%;
+      }
+
+      a {
+        color: inherit;
+        text-decoration: none;
+      }
+
+      .sr-only {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        padding: 0;
+        margin: -1px;
+        overflow: hidden;
+        clip: rect(0, 0, 0, 0);
+        white-space: nowrap;
+        border: 0;
+      }
+
+      button,
+      input,
+      select,
+      textarea {
+        font: inherit;
+      }
+
+      .site-shell {
+        overflow: hidden;
+        background:
+          radial-gradient(circle at 10% 5%, rgba(159, 47, 88, 0.09), transparent 24rem),
+          linear-gradient(180deg, #fff 0%, #fbf8f9 48%, #fff 100%);
+      }
+
+      .nav {
+        position: fixed;
+        inset: 0 0 auto;
+        z-index: 20;
+        background: rgba(255, 255, 255, 0.88);
+        border-bottom: 1px solid rgba(16, 16, 20, 0.08);
+        backdrop-filter: blur(18px);
+      }
+
+      .nav-inner {
+        width: min(var(--max), calc(100% - 32px));
+        height: 72px;
+        margin: 0 auto;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 20px;
+      }
+
+      .brand {
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        font-weight: 800;
+        color: var(--black);
+        white-space: nowrap;
+      }
+
+      .brand-mark {
+        width: 38px;
+        height: 38px;
+        border: 1px solid rgba(159, 47, 88, 0.22);
+        border-radius: 50%;
+        object-fit: contain;
+        background: var(--white);
+      }
+
+      .brand span {
+        display: block;
+        font-size: 0.72rem;
+        font-weight: 700;
+        color: var(--rose);
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+
+      .nav-links {
+        position: fixed;
+        top: 72px;
+        right: 16px;
+        left: 16px;
+        display: none;
+        padding: 14px;
+        background: var(--white);
+        border: 1px solid rgba(16, 16, 20, 0.08);
+        border-radius: var(--radius);
+        box-shadow: var(--shadow);
+      }
+
+      .nav-links.open {
+        display: grid;
+        gap: 4px;
+      }
+
+      .nav-links a {
+        padding: 12px 10px;
+        border-radius: 6px;
+        color: var(--grey-700);
+        font-size: 0.94rem;
+        font-weight: 700;
+      }
+
+      .nav-links a:hover,
+      .nav-links a:focus {
+        color: var(--rose);
+        background: var(--rose-soft);
+        outline: none;
+      }
+
+      .nav-actions {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .icon-button {
+        display: inline-grid;
+        width: 44px;
+        height: 44px;
+        place-items: center;
+        border: 1px solid rgba(16, 16, 20, 0.12);
+        border-radius: 50%;
+        color: var(--black);
+        background: var(--white);
+        cursor: pointer;
+      }
+
+      .icon-button i {
+        font-size: 1.25rem;
+      }
+
+      .btn {
+        display: inline-flex;
+        min-height: 48px;
+        align-items: center;
+        justify-content: center;
+        gap: 9px;
+        padding: 0 18px;
+        border: 1px solid transparent;
+        border-radius: 999px;
+        cursor: pointer;
+        font-weight: 800;
+        transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+      }
+
+      .btn:hover {
+        transform: translateY(-2px);
+      }
+
+      .btn-primary {
+        color: var(--white);
+        background: var(--rose);
+        box-shadow: 0 18px 35px rgba(159, 47, 88, 0.28);
+      }
+
+      .btn-primary:hover {
+        background: var(--rose-dark);
+      }
+
+      .btn-light {
+        color: var(--black);
+        background: var(--white);
+        border-color: rgba(255, 255, 255, 0.48);
+      }
+
+      .btn-outline {
+        color: var(--rose-dark);
+        background: transparent;
+        border-color: rgba(159, 47, 88, 0.25);
+      }
+
+      .section {
+        padding: 76px 0;
+      }
+
+      .container {
+        width: min(var(--max), calc(100% - 32px));
+        margin: 0 auto;
+      }
+
+      .hero {
+        min-height: 86svh;
+        padding: 112px 0 54px;
+        color: var(--white);
+        background:
+          linear-gradient(90deg, rgba(16, 16, 20, 0.86) 0%, rgba(16, 16, 20, 0.62) 48%, rgba(16, 16, 20, 0.14) 100%),
+          url("img/cybera.jpg") center / cover no-repeat;
+        display: flex;
+        align-items: center;
+      }
+
+      .hero-content {
+        max-width: var(--text-max);
+      }
+
+      .eyebrow {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 18px;
+        color: var(--rose-soft);
+        font-size: 0.8rem;
+        font-weight: 800;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+      }
+
+      .eyebrow::before {
+        content: "";
+        width: 28px;
+        height: 2px;
+        background: var(--rose-muted);
+      }
+
+      h1,
+      h2,
+      h3,
+      p {
+        margin-top: 0;
+      }
+
+      h1 {
+        max-width: var(--text-max);
+        margin-bottom: 18px;
+        font-size: clamp(2.7rem, 9vw, 5.9rem);
+        line-height: 0.95;
+        letter-spacing: 0;
+      }
+
+      h1 span {
+        display: block;
+      }
+
+      .hero p {
+        max-width: 540px;
+        margin-bottom: 28px;
+        color: rgba(255, 255, 255, 0.9);
+        font-size: clamp(1rem, 2.6vw, 1.25rem);
+      }
+
+      .hero-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+      }
+
+      .hero-metrics {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        max-width: 640px;
+        gap: 12px;
+        margin-top: 44px;
+      }
+
+      .metric {
+        min-height: 104px;
+        padding: 18px;
+        border: 1px solid rgba(255, 255, 255, 0.18);
+        border-radius: var(--radius);
+        background: rgba(255, 255, 255, 0.08);
+        backdrop-filter: blur(12px);
+      }
+
+      .metric strong {
+        display: block;
+        color: var(--white);
+        font-size: 1.55rem;
+        line-height: 1;
+      }
+
+      .metric span {
+        display: block;
+        margin-top: 9px;
+        color: rgba(255, 255, 255, 0.78);
+        font-size: 0.9rem;
+      }
+
+      .section-head {
+        display: grid;
+        gap: 14px;
+        margin-bottom: 34px;
+      }
+
+      .section-kicker {
+        color: var(--rose);
+        font-size: 0.78rem;
+        font-weight: 800;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+      }
+
+      .section-title {
+        max-width: var(--text-max);
+        margin-bottom: 0;
+        font-size: clamp(2rem, 6vw, 4rem);
+        line-height: 1.02;
+        letter-spacing: 0;
+      }
+
+      .section-copy {
+        max-width: 620px;
+        margin-bottom: 0;
+        color: var(--grey-700);
+        font-size: 1rem;
+      }
+
+      .about-layout,
+      .formation-layout,
+      .community-layout,
+      .contact-layout {
+        display: grid;
+        gap: 28px;
+      }
+
+      .photo-panel {
+        position: relative;
+        min-height: 360px;
+        overflow: hidden;
+        border-radius: var(--radius);
+        box-shadow: var(--shadow);
+        background: var(--grey-900);
+      }
+
+      .photo-panel img {
+        width: 100%;
+        height: 100%;
+        min-height: inherit;
+        object-fit: cover;
+      }
+
+      .photo-badge {
+        position: absolute;
+        right: 18px;
+        bottom: 18px;
+        max-width: 250px;
+        padding: 16px;
+        color: var(--black);
+        background: rgba(255, 255, 255, 0.9);
+        border-radius: var(--radius);
+        box-shadow: 0 16px 36px rgba(16, 16, 20, 0.16);
+      }
+
+      .photo-badge strong {
+        display: block;
+        font-size: 1.6rem;
+        line-height: 1;
+      }
+
+      .photo-badge span {
+        color: var(--grey-700);
+        font-size: 0.9rem;
+      }
+
+      .feature-grid,
+      .program-grid,
+      .article-grid,
+      .testimonial-grid,
+      .partner-grid {
+        display: grid;
+        gap: 16px;
+      }
+
+      .feature-card,
+      .program-card,
+      .article-card,
+      .testimonial-card,
+      .partner-card,
+      .form-card,
+      .newsletter,
+      .illustration-stage {
+        border: 1px solid rgba(16, 16, 20, 0.08);
+        border-radius: var(--radius);
+        background: rgba(255, 255, 255, 0.84);
+        box-shadow: 0 16px 48px rgba(16, 16, 20, 0.06);
+      }
+
+      .feature-card,
+      .program-card,
+      .testimonial-card,
+      .partner-card {
+        padding: 22px;
+      }
+
+      .feature-icon,
+      .program-icon {
+        display: inline-grid;
+        width: 48px;
+        height: 48px;
+        margin-bottom: 18px;
+        place-items: center;
+        border-radius: 50%;
+        color: var(--rose);
+        background: var(--rose-soft);
+      }
+
+      .feature-icon i,
+      .program-icon i {
+        font-size: 1.35rem;
+      }
+
+      .feature-card h3,
+      .program-card h3,
+      .article-card h3 {
+        margin-bottom: 10px;
+        font-size: 1.12rem;
+        line-height: 1.25;
+      }
+
+      .feature-card p,
+      .program-card p,
+      .article-card p,
+      .testimonial-card p {
+        margin-bottom: 0;
+        color: var(--grey-700);
+      }
+
+      .formation {
+        background: var(--grey-100);
+      }
+
+      .program-card {
+        display: grid;
+        align-content: start;
+        min-height: 270px;
+      }
+
+      .program-meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-top: 18px;
+      }
+
+      .tag {
+        display: inline-flex;
+        align-items: center;
+        min-height: 32px;
+        padding: 0 11px;
+        border-radius: 999px;
+        color: var(--rose-dark);
+        background: var(--rose-soft);
+        font-size: 0.78rem;
+        font-weight: 800;
+      }
+
+      .illustration-stage {
+        position: relative;
+        min-height: 470px;
+        overflow: hidden;
+        padding: 24px;
+        background:
+          linear-gradient(160deg, rgba(159, 47, 88, 0.15), rgba(255, 255, 255, 0) 42%),
+          var(--white);
+      }
+
+      .device {
+        position: absolute;
+        right: -28px;
+        bottom: 36px;
+        width: min(78%, 420px);
+        height: 270px;
+        border: 12px solid var(--grey-900);
+        border-radius: 18px;
+        background:
+          linear-gradient(135deg, rgba(159, 47, 88, 0.92), rgba(16, 16, 20, 0.96)),
+          url("img/cybertrends.jpg") center / cover;
+        box-shadow: var(--shadow);
+      }
+
+      .device::after {
+        content: "";
+        position: absolute;
+        left: 50%;
+        bottom: -34px;
+        width: 140px;
+        height: 18px;
+        transform: translateX(-50%);
+        border-radius: 999px;
+        background: var(--grey-900);
+      }
+
+      .person {
+        position: absolute;
+        left: 28px;
+        bottom: 28px;
+        width: 176px;
+        height: 300px;
+      }
+
+      .person .head {
+        position: absolute;
+        left: 48px;
+        top: 10px;
+        width: 82px;
+        height: 88px;
+        border-radius: 46% 46% 44% 44%;
+        background: #5d3526;
+        box-shadow: inset 0 -8px 0 rgba(16, 16, 20, 0.09);
+      }
+
+      .person .hair {
+        position: absolute;
+        left: 34px;
+        top: 0;
+        width: 108px;
+        height: 70px;
+        border-radius: 50% 50% 34% 34%;
+        background: var(--black);
+      }
+
+      .person .hair::before,
+      .person .hair::after {
+        content: "";
+        position: absolute;
+        border-radius: 50%;
+        background: var(--black);
+      }
+
+      .person .hair::before {
+        left: -4px;
+        top: 28px;
+        width: 34px;
+        height: 44px;
+      }
+
+      .person .hair::after {
+        right: 0;
+        top: 22px;
+        width: 30px;
+        height: 48px;
+      }
+
+      .person .neck {
+        position: absolute;
+        left: 74px;
+        top: 86px;
+        width: 30px;
+        height: 32px;
+        background: #5d3526;
+      }
+
+      .person .body {
+        position: absolute;
+        left: 25px;
+        top: 110px;
+        width: 126px;
+        height: 150px;
+        border-radius: 42px 42px 14px 14px;
+        background: var(--rose);
+      }
+
+      .person .body::after {
+        content: "";
+        position: absolute;
+        left: 42px;
+        top: 0;
+        width: 42px;
+        height: 122px;
+        background: rgba(255, 255, 255, 0.16);
+      }
+
+      .person .arm {
+        position: absolute;
+        top: 128px;
+        width: 34px;
+        height: 112px;
+        border-radius: 999px;
+        background: #5d3526;
+      }
+
+      .person .arm.left {
+        left: 0;
+        transform: rotate(18deg);
+      }
+
+      .person .arm.right {
+        right: 0;
+        transform: rotate(-26deg);
+      }
+
+      .person .tablet {
+        position: absolute;
+        right: 2px;
+        top: 180px;
+        width: 78px;
+        height: 96px;
+        border: 7px solid var(--grey-900);
+        border-radius: 10px;
+        background: var(--rose-soft);
+        transform: rotate(-12deg);
+      }
+
+      .floating-note {
+        position: absolute;
+        min-width: 148px;
+        padding: 13px 14px;
+        border: 1px solid rgba(16, 16, 20, 0.08);
+        border-radius: var(--radius);
+        background: var(--white);
+        box-shadow: 0 18px 42px rgba(16, 16, 20, 0.12);
+      }
+
+      .floating-note i {
+        color: var(--rose);
+      }
+
+      .floating-note strong {
+        display: block;
+        margin-top: 6px;
+        font-size: 0.88rem;
+      }
+
+      .floating-note span {
+        color: var(--grey-500);
+        font-size: 0.78rem;
+      }
+
+      .note-1 {
+        top: 34px;
+        left: 26px;
+      }
+
+      .note-2 {
+        top: 132px;
+        right: 24px;
+      }
+
+      .community {
+        color: var(--white);
+        background: var(--grey-900);
+      }
+
+      .community .section-kicker,
+      .community .section-copy {
+        color: rgba(255, 255, 255, 0.72);
+      }
+
+      .community .section-title {
+        color: var(--white);
+      }
+
+      .community-list {
+        display: grid;
+        gap: 12px;
+      }
+
+      .community-item {
+        display: grid;
+        grid-template-columns: 48px 1fr;
+        gap: 14px;
+        padding: 18px;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: var(--radius);
+        background: rgba(255, 255, 255, 0.05);
+      }
+
+      .community-item i {
+        display: grid;
+        width: 48px;
+        height: 48px;
+        place-items: center;
+        border-radius: 50%;
+        color: var(--rose-soft);
+        background: rgba(255, 255, 255, 0.1);
+        font-size: 1.3rem;
+      }
+
+      .community-item h3 {
+        margin-bottom: 4px;
+        color: var(--white);
+        font-size: 1rem;
+      }
+
+      .community-item p {
+        margin-bottom: 0;
+        color: rgba(255, 255, 255, 0.72);
+        font-size: 0.94rem;
+      }
+
+      .community-photo {
+        overflow: hidden;
+        border-radius: var(--radius);
+        min-height: 460px;
+        box-shadow: 0 24px 80px rgba(0, 0, 0, 0.28);
+      }
+
+      .community-photo img {
+        width: 100%;
+        height: 100%;
+        min-height: inherit;
+        object-fit: cover;
+      }
+
+      .article-card {
+        overflow: hidden;
+      }
+
+      .article-card img {
+        width: 100%;
+        aspect-ratio: 16 / 10;
+        object-fit: cover;
+      }
+
+      .article-body {
+        padding: 20px;
+      }
+
+      .article-meta {
+        display: flex;
+        justify-content: space-between;
+        gap: 12px;
+        margin-bottom: 12px;
+        color: var(--rose);
+        font-size: 0.76rem;
+        font-weight: 800;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+
+      .article-link {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        margin-top: 18px;
+        color: var(--rose-dark);
+        font-weight: 800;
+      }
+
+      .newsletter {
+        display: grid;
+        gap: 18px;
+        margin-top: 34px;
+        padding: 24px;
+        color: var(--white);
+        background: var(--black);
+      }
+
+      .newsletter h3 {
+        margin-bottom: 4px;
+        font-size: 1.45rem;
+      }
+
+      .newsletter p {
+        margin-bottom: 0;
+        color: rgba(255, 255, 255, 0.74);
+      }
+
+      .newsletter-form {
+        display: grid;
+        gap: 10px;
+      }
+
+      .newsletter-form input {
+        width: 100%;
+        min-height: 52px;
+        padding: 0 16px;
+        border: 1px solid rgba(255, 255, 255, 0.16);
+        border-radius: 999px;
+        color: var(--white);
+        background: rgba(255, 255, 255, 0.08);
+        outline: none;
+      }
+
+      .newsletter-form input:focus {
+        border-color: var(--rose-soft);
+      }
+
+      .testimonials {
+        background: var(--grey-100);
+      }
+
+      .testimonial-card {
+        display: grid;
+        gap: 18px;
+      }
+
+      .quote-icon {
+        width: 42px;
+        height: 42px;
+        display: grid;
+        place-items: center;
+        border-radius: 50%;
+        color: var(--rose);
+        background: var(--rose-soft);
+        font-size: 1.4rem;
+      }
+
+      .person-row {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+
+      .avatar {
+        display: grid;
+        width: 46px;
+        height: 46px;
+        place-items: center;
+        border-radius: 50%;
+        color: var(--white);
+        background: var(--rose);
+        font-weight: 800;
+      }
+
+      .person-row strong,
+      .person-row span {
+        display: block;
+      }
+
+      .person-row span {
+        color: var(--grey-500);
+        font-size: 0.85rem;
+      }
+
+      .partners .section-head {
+        text-align: center;
+        justify-items: center;
+      }
+
+      .partner-card {
+        min-height: 120px;
+        display: grid;
+        place-items: center;
+        text-align: center;
+      }
+
+      .partner-card i {
+        margin-bottom: 8px;
+        color: var(--rose);
+        font-size: 1.7rem;
+      }
+
+      .partner-card span {
+        display: block;
+        color: var(--grey-700);
+        font-weight: 800;
+      }
+
+      .contact {
+        background:
+          linear-gradient(180deg, var(--white), var(--grey-100));
+      }
+
+      .contact-aside {
+        display: grid;
+        gap: 16px;
+      }
+
+      .contact-card {
+        display: grid;
+        grid-template-columns: 48px 1fr;
+        gap: 14px;
+        padding: 18px;
+        border: 1px solid rgba(16, 16, 20, 0.08);
+        border-radius: var(--radius);
+        background: var(--white);
+      }
+
+      .contact-card i {
+        display: grid;
+        width: 48px;
+        height: 48px;
+        place-items: center;
+        border-radius: 50%;
+        color: var(--rose);
+        background: var(--rose-soft);
+        font-size: 1.25rem;
+      }
+
+      .contact-card strong {
+        display: block;
+      }
+
+      .contact-card span,
+      .contact-card a {
+        color: var(--grey-700);
+      }
+
+      .socials {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+      }
+
+      .socials a {
+        display: grid;
+        width: 44px;
+        height: 44px;
+        place-items: center;
+        border: 1px solid rgba(16, 16, 20, 0.12);
+        border-radius: 50%;
+        color: var(--rose);
+        background: var(--white);
+      }
+
+      .form-card {
+        padding: 22px;
+      }
+
+      .form-grid {
+        display: grid;
+        gap: 14px;
+      }
+
+      .field {
+        display: grid;
+        gap: 7px;
+      }
+
+      label {
+        color: var(--grey-700);
+        font-size: 0.86rem;
+        font-weight: 800;
+      }
+
+      input,
+      select,
+      textarea {
+        width: 100%;
+        border: 1px solid rgba(16, 16, 20, 0.12);
+        border-radius: 8px;
+        color: var(--black);
+        background: var(--white);
+        outline: none;
+        transition: border-color 0.2s ease, box-shadow 0.2s ease;
+      }
+
+      input,
+      select {
+        min-height: 50px;
+        padding: 0 14px;
+      }
+
+      textarea {
+        min-height: 132px;
+        padding: 14px;
+        resize: vertical;
+      }
+
+      input:focus,
+      select:focus,
+      textarea:focus {
+        border-color: var(--rose);
+        box-shadow: 0 0 0 4px rgba(159, 47, 88, 0.11);
+      }
+
+      .footer {
+        padding: 34px 0;
+        color: rgba(255, 255, 255, 0.68);
+        background: var(--black);
+      }
+
+      .footer-inner {
+        display: grid;
+        gap: 16px;
+      }
+
+      .footer a {
+        color: var(--white);
+        font-weight: 700;
+      }
+
+      .footer-links {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 14px;
+      }
+
+      .toast {
+        position: fixed;
+        right: 18px;
+        bottom: 18px;
+        z-index: 50;
+        max-width: min(360px, calc(100vw - 36px));
+        padding: 14px 16px;
+        border-radius: var(--radius);
+        color: var(--white);
+        background: var(--black);
+        box-shadow: var(--shadow);
+        transform: translateY(24px);
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.2s ease, transform 0.2s ease;
+      }
+
+      .toast.show {
+        transform: translateY(0);
+        opacity: 1;
+      }
+
+      .reveal {
+        transform: translateY(24px);
+        opacity: 0;
+        transition: opacity 0.7s ease, transform 0.7s ease;
+      }
+
+      .reveal.visible {
+        transform: translateY(0);
+        opacity: 1;
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        *,
+        *::before,
+        *::after {
+          scroll-behavior: auto !important;
+          transition-duration: 0.01ms !important;
+          animation-duration: 0.01ms !important;
+        }
+
+        .reveal {
+          transform: none;
+          opacity: 1;
+        }
+      }
+
+      @media (min-width: 640px) {
+        .hero-metrics,
+        .feature-grid,
+        .program-grid,
+        .article-grid,
+        .testimonial-grid,
+        .partner-grid {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+
+        .newsletter {
+          grid-template-columns: 1fr 1fr;
+          align-items: center;
+        }
+
+        .newsletter-form {
+          grid-template-columns: 1fr auto;
+        }
+
+        .form-grid.two {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+      }
+
+      @media (min-width: 900px) {
+        .nav-links {
+          position: static;
+          display: flex;
+          align-items: center;
+          width: auto;
+          padding: 0;
+          border: 0;
+          box-shadow: none;
+          background: transparent;
+        }
+
+        .nav-links a {
+          padding: 8px 10px;
+          font-size: 0.85rem;
+        }
+
+        .menu-button {
+          display: none;
+        }
+
+        .section {
+          padding: 104px 0;
+        }
+
+        .about-layout,
+        .formation-layout,
+        .community-layout,
+        .contact-layout {
+          grid-template-columns: minmax(0, 0.9fr) minmax(0, 1fr);
+          align-items: center;
+          gap: 36px;
+        }
+
+        .formation-layout,
+        .contact-layout {
+          grid-template-columns: minmax(0, 1fr) minmax(0, 0.9fr);
+        }
+
+        .program-grid,
+        .article-grid,
+        .testimonial-grid {
+          grid-template-columns: repeat(3, minmax(0, 1fr));
+        }
+
+        .feature-grid,
+        .partner-grid {
+          grid-template-columns: repeat(4, minmax(0, 1fr));
+        }
+
+        .footer-inner {
+          grid-template-columns: 1fr auto;
+          align-items: center;
+        }
+      }
+
+      @media (max-width: 899px) {
+        .nav-actions .btn {
+          display: none;
+        }
+
+        .hero-content {
+          max-width: min(100%, 300px);
+        }
+
+        .eyebrow {
+          max-width: 100%;
+          letter-spacing: 0.08em;
+          white-space: normal;
+        }
+
+        h1 {
+          max-width: 100%;
+          font-size: clamp(2.35rem, 10vw, 2.75rem);
+          line-height: 1.02;
+          overflow-wrap: anywhere;
+        }
+
+        h1 span {
+          font-size: 0.72em;
+          line-height: 1.04;
+        }
+
+        .hero-metrics {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      @media (max-width: 480px) {
+        .nav-inner,
+        .container {
+          width: min(var(--max), calc(100% - 24px));
+        }
+
+        .brand strong {
+          max-width: 142px;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+        }
+
+        .hero {
+          min-height: 84svh;
+          padding-top: 102px;
+          background-position: 58% center;
+        }
+
+        h1 {
+          font-size: clamp(2.45rem, 11vw, 2.75rem);
+        }
+
+        .hero-actions .btn,
+        .newsletter-form .btn,
+        .form-card .btn {
+          width: 100%;
+        }
+
+        .photo-badge {
+          right: 12px;
+          bottom: 12px;
+          left: 12px;
+          max-width: none;
+        }
+
+        .illustration-stage {
+          min-height: 420px;
+        }
+
+        .device {
+          right: -74px;
+          width: 360px;
+          height: 230px;
+        }
+
+        .note-2 {
+          top: 116px;
+          right: 12px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="site-shell">
+      <header class="nav" aria-label="Navigation principale">
+        <div class="nav-inner">
+          <a href="#accueil" class="brand" aria-label="Sykoti Cyberambassador">
+            <img class="brand-mark" src="img/logo.png" alt="" />
+            <strong>Sykoti <span>Cyberambassador</span></strong>
+          </a>
+
+          <nav class="nav-links" id="navLinks">
+            <a href="#accueil">Accueil</a>
+            <a href="#projet">Projet</a>
+            <a href="#formation">Formation</a>
+            <a href="#communaute">Communaute</a>
+            <a href="#articles">Articles</a>
+            <a href="#contact">Contact</a>
+          </nav>
+
+          <div class="nav-actions">
+            <a class="btn btn-primary" href="#contact">Rejoindre</a>
+            <button class="icon-button menu-button" id="menuButton" type="button" aria-label="Ouvrir le menu" aria-expanded="false">
+              <i class="ri-menu-3-line" aria-hidden="true"></i>
+            </button>
+          </div>
+        </div>
+      </header>
+
+      <main>
+        <section class="hero" id="accueil">
+          <div class="container hero-content reveal">
+            <div class="eyebrow">Plateforme africaine de litteratie numerique</div>
+            <h1>Sykoti <span>Cyberambassador</span></h1>
+            <p>
+              Former les citoyens, proteger les familles et mobiliser une communaute
+              africaine capable de porter des projets d'awareness utiles, concrets et
+              visibles.
+            </p>
+            <div class="hero-actions">
+              <a class="btn btn-primary" href="#contact">Rejoindre la communauté</a>
+              <a class="btn btn-light" href="#formation">
+                <i class="ri-graduation-cap-line" aria-hidden="true"></i>
+                Decouvrir les formations
+              </a>
+            </div>
+            <div class="hero-metrics" aria-label="Impact Sykoti">
+              <div class="metric">
+                <strong>4 publics</strong>
+                <span>Jeunes, parents, grand public et partenaires terrain.</span>
+              </div>
+              <div class="metric">
+                <strong>100%</strong>
+                <span>Programmes pratiques orientes reflexes, prevention et action.</span>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="section" id="projet">
+          <div class="container about-layout">
+            <div class="photo-panel reveal">
+              <img src="img/1.jpg" alt="Jeunes africains utilisant un ordinateur et une tablette" />
+              <div class="photo-badge">
+                <strong>Awareness</strong>
+                <span>Des campagnes simples, locales et faciles a relayer.</span>
+              </div>
+            </div>
+
+            <div class="reveal">
+              <div class="section-head">
+                <span class="section-kicker">A propos du projet</span>
+                <h2 class="section-title">Une culture numerique serieuse, accessible et proche des realites africaines.</h2>
+                <p class="section-copy">
+                  Sykoti Cyberambassador transforme la sensibilisation cyber en apprentissage
+                  clair, humain et actionnable. Le projet donne aux citoyens les bases pour
+                  reconnaitre les risques, proteger leurs donnees et aider leur entourage.
+                </p>
+              </div>
+
+              <div class="feature-grid">
+                <article class="feature-card">
+                  <span class="feature-icon"><i class="ri-shield-check-line" aria-hidden="true"></i></span>
+                  <h3>Prevention</h3>
+                  <p>Arnaques, mots de passe, vie privee, paiements et securite mobile.</p>
+                </article>
+                <article class="feature-card">
+                  <span class="feature-icon"><i class="ri-parent-line" aria-hidden="true"></i></span>
+                  <h3>Familles</h3>
+                  <p>Des reperes pour accompagner les enfants sans peur ni jugement.</p>
+                </article>
+                <article class="feature-card">
+                  <span class="feature-icon"><i class="ri-group-line" aria-hidden="true"></i></span>
+                  <h3>Ambassadeurs</h3>
+                  <p>Une communaute outillee pour animer des actions de proximite.</p>
+                </article>
+                <article class="feature-card">
+                  <span class="feature-icon"><i class="ri-hand-heart-line" aria-hidden="true"></i></span>
+                  <h3>Partenariats</h3>
+                  <p>Des formats adaptables pour ecoles, associations, marques et institutions.</p>
+                </article>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="section formation" id="formation">
+          <div class="container">
+            <div class="formation-layout">
+              <div class="reveal">
+                <div class="section-head">
+                  <span class="section-kicker">Training / Formation</span>
+                  <h2 class="section-title">Des parcours courts pour passer de l'inquietude aux bons reflexes.</h2>
+                  <p class="section-copy">
+                    Chaque module combine explications simples, cas reels, mini-defis et
+                    supports partageables pour amplifier l'impact au-dela de la salle.
+                  </p>
+                </div>
+                <a class="btn btn-primary" href="#contact">S'inscrire a une session</a>
+              </div>
+
+              <div class="program-grid">
+                <article class="program-card reveal">
+                  <span class="program-icon"><i class="ri-smartphone-line" aria-hidden="true"></i></span>
+                  <h3>Hygiene numerique essentielle</h3>
+                  <p>Verrouillage, sauvegardes, mises a jour, mots de passe et double authentification.</p>
+                  <div class="program-meta">
+                    <span class="tag">Debutant</span>
+                    <span class="tag">2h</span>
+                  </div>
+                </article>
+                <article class="program-card reveal">
+                  <span class="program-icon"><i class="ri-alert-line" aria-hidden="true"></i></span>
+                  <h3>Identifier les arnaques</h3>
+                  <p>Phishing, faux investissements, usurpation, liens pieges et messages urgents.</p>
+                  <div class="program-meta">
+                    <span class="tag">Public</span>
+                    <span class="tag">Atelier</span>
+                  </div>
+                </article>
+                <article class="program-card reveal">
+                  <span class="program-icon"><i class="ri-megaphone-line" aria-hidden="true"></i></span>
+                  <h3>Devenir cyberambassador</h3>
+                  <p>Methodologie d'animation, posture, kit de sensibilisation et mesure d'impact.</p>
+                  <div class="program-meta">
+                    <span class="tag">Community</span>
+                    <span class="tag">Projet</span>
+                  </div>
+                </article>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="section community" id="communaute">
+          <div class="container community-layout">
+            <div class="reveal">
+              <div class="section-head">
+                <span class="section-kicker">Communaute</span>
+                <h2 class="section-title">Des ambassadeurs qui apprennent, agissent et transmettent.</h2>
+                <p class="section-copy">
+                  La communaute Sykoti rassemble des profils varies autour d'une mission
+                  commune : rendre la securite numerique plus proche, plus digne et plus
+                  utile pour tous.
+                </p>
+              </div>
+
+              <div class="community-list">
+                <article class="community-item">
+                  <i class="ri-map-pin-line" aria-hidden="true"></i>
+                  <div>
+                    <h3>Actions locales</h3>
+                    <p>Mini-campagnes dans les ecoles, quartiers, campus et espaces publics.</p>
+                  </div>
+                </article>
+                <article class="community-item">
+                  <i class="ri-tools-line" aria-hidden="true"></i>
+                  <div>
+                    <h3>Kits partageables</h3>
+                    <p>Guides, visuels, scripts d'ateliers et contenus pour reseaux sociaux.</p>
+                  </div>
+                </article>
+                <article class="community-item">
+                  <i class="ri-line-chart-line" aria-hidden="true"></i>
+                  <div>
+                    <h3>Impact mesurable</h3>
+                    <p>Suivi des participants, retours terrain et progression des ambassadeurs.</p>
+                  </div>
+                </article>
+              </div>
+            </div>
+
+            <div class="community-photo reveal">
+              <img src="img/dp.jpg" alt="Groupe africain collaborant autour d'un smartphone et d'un ordinateur" />
+            </div>
+          </div>
+        </section>
+
+        <section class="section" aria-label="Illustration de formation numerique">
+          <div class="container illustration-stage reveal">
+            <div class="floating-note note-1">
+              <i class="ri-lock-password-line" aria-hidden="true"></i>
+              <strong>Reflexes cyber</strong>
+              <span>Clairs et applicables</span>
+            </div>
+            <div class="floating-note note-2">
+              <i class="ri-team-line" aria-hidden="true"></i>
+              <strong>Mentorat</strong>
+              <span>Apprendre ensemble</span>
+            </div>
+            <div class="device" aria-hidden="true"></div>
+            <div class="person" aria-hidden="true">
+              <span class="hair"></span>
+              <span class="head"></span>
+              <span class="neck"></span>
+              <span class="body"></span>
+              <span class="arm left"></span>
+              <span class="arm right"></span>
+              <span class="tablet"></span>
+            </div>
+          </div>
+        </section>
+
+        <section class="section" id="articles">
+          <div class="container">
+            <div class="section-head reveal">
+              <span class="section-kicker">Blog / Articles</span>
+              <h2 class="section-title">Un espace editorial pret a grandir avec les campagnes.</h2>
+              <p class="section-copy">
+                Les contenus peuvent etre ajoutes progressivement : conseils pratiques,
+                retours d'ateliers, interviews d'ambassadeurs et ressources pour parents.
+              </p>
+            </div>
+
+            <div class="article-grid">
+              <article class="article-card reveal">
+                <img src="img/cybertrends.jpg" alt="Main utilisant une tablette avec interface cyber" />
+                <div class="article-body">
+                  <div class="article-meta"><span>Securite</span><span>5 min</span></div>
+                  <h3>Les cinq signaux qui doivent faire douter avant de cliquer</h3>
+                  <p>Une grille simple pour reconnaitre l'urgence artificielle et les liens suspects.</p>
+                  <a class="article-link" href="#contact">Lire bientot <i class="ri-arrow-right-line" aria-hidden="true"></i></a>
+                </div>
+              </article>
+              <article class="article-card reveal">
+                <img src="img/micro.jpg" alt="Microphone dans une salle de conference" />
+                <div class="article-body">
+                  <div class="article-meta"><span>Terrain</span><span>Report</span></div>
+                  <h3>Organiser une session d'awareness dans son quartier</h3>
+                  <p>Un canevas d'atelier pour passer du message en ligne a l'action locale.</p>
+                  <a class="article-link" href="#contact">Lire bientot <i class="ri-arrow-right-line" aria-hidden="true"></i></a>
+                </div>
+              </article>
+              <article class="article-card reveal">
+                <img src="img/7200955_30758.jpg" alt="Illustration abstraite de partenariat numerique" />
+                <div class="article-body">
+                  <div class="article-meta"><span>Parents</span><span>Guide</span></div>
+                  <h3>Parler de risques en ligne sans creer de panique</h3>
+                  <p>Des phrases, limites et rituels pour installer la confiance a la maison.</p>
+                  <a class="article-link" href="#contact">Lire bientot <i class="ri-arrow-right-line" aria-hidden="true"></i></a>
+                </div>
+              </article>
+            </div>
+
+            <aside class="newsletter reveal" aria-label="Newsletter">
+              <div>
+                <h3>Recevoir les prochaines ressources</h3>
+                <p>Une veille courte, utile et adaptee aux familles, jeunes et relais communautaires.</p>
+              </div>
+              <form class="newsletter-form js-form" data-success="Merci, votre inscription a la newsletter est bien prise en compte.">
+                <label class="sr-only" for="newsletterEmail">Email</label>
+                <input id="newsletterEmail" name="email" type="email" placeholder="Votre email" required />
+                <button class="btn btn-primary" type="submit">S'inscrire</button>
+              </form>
+            </aside>
+          </div>
+        </section>
+
+        <section class="section testimonials" id="temoignages">
+          <div class="container">
+            <div class="section-head reveal">
+              <span class="section-kicker">Temoignages</span>
+              <h2 class="section-title">Une plateforme pensee pour celles et ceux qui relaient la confiance.</h2>
+            </div>
+
+            <div class="testimonial-grid">
+              <article class="testimonial-card reveal">
+                <span class="quote-icon"><i class="ri-double-quotes-l" aria-hidden="true"></i></span>
+                <p>Les modules vont droit au but. Les jeunes repartent avec des gestes concrets, pas seulement des definitions.</p>
+                <div class="person-row">
+                  <span class="avatar">AM</span>
+                  <div><strong>Amina M.</strong><span>Educatrice numerique</span></div>
+                </div>
+              </article>
+              <article class="testimonial-card reveal">
+                <span class="quote-icon"><i class="ri-double-quotes-l" aria-hidden="true"></i></span>
+                <p>Le ton est moderne et respectueux. On peut parler de cybersecurite aux parents sans les culpabiliser.</p>
+                <div class="person-row">
+                  <span class="avatar">JO</span>
+                  <div><strong>Joel O.</strong><span>Association partenaire</span></div>
+                </div>
+              </article>
+              <article class="testimonial-card reveal">
+                <span class="quote-icon"><i class="ri-double-quotes-l" aria-hidden="true"></i></span>
+                <p>La dimension communaute change tout : chacun devient capable d'expliquer, d'alerter et d'aider.</p>
+                <div class="person-row">
+                  <span class="avatar">NS</span>
+                  <div><strong>Nadia S.</strong><span>Cyberambassador</span></div>
+                </div>
+              </article>
+            </div>
+          </div>
+        </section>
+
+        <section class="section partners" id="partenaires">
+          <div class="container">
+            <div class="section-head reveal">
+              <span class="section-kicker">Partenaires / Sponsors</span>
+              <h2 class="section-title">Ouvert aux organisations qui veulent soutenir l'education numerique.</h2>
+              <p class="section-copy">
+                Ecoles, ONG, entreprises, medias, collectivites et institutions peuvent
+                contribuer par des lieux, experts, contenus, financements ou relais terrain.
+              </p>
+            </div>
+            <div class="partner-grid">
+              <div class="partner-card reveal"><i class="ri-school-line" aria-hidden="true"></i><span>Ecoles & campus</span></div>
+              <div class="partner-card reveal"><i class="ri-building-4-line" aria-hidden="true"></i><span>Institutions</span></div>
+              <div class="partner-card reveal"><i class="ri-store-2-line" aria-hidden="true"></i><span>Entreprises</span></div>
+              <div class="partner-card reveal"><i class="ri-broadcast-line" aria-hidden="true"></i><span>Medias & createurs</span></div>
+            </div>
+          </div>
+        </section>
+
+        <section class="section contact" id="contact">
+          <div class="container contact-layout">
+            <div class="contact-aside reveal">
+              <div class="section-head">
+                <span class="section-kicker">Contact / Inscription</span>
+                <h2 class="section-title">Rejoindre la communaute Sykoti Cyberambassador.</h2>
+                <p class="section-copy">
+                  Inscrivez-vous pour une formation, proposez un partenariat ou demandez
+                  une action de sensibilisation dans votre communaute.
+                </p>
+              </div>
+
+              <div class="contact-card">
+                <i class="ri-mail-line" aria-hidden="true"></i>
+                <div>
+                  <strong>Email</strong>
+                  <a href="mailto:contact@sykoti.org">contact@sykoti.org</a>
+                </div>
+              </div>
+              <div class="contact-card">
+                <i class="ri-global-line" aria-hidden="true"></i>
+                <div>
+                  <strong>Presence</strong>
+                  <span>Afrique francophone et communautes partenaires</span>
+                </div>
+              </div>
+              <div class="socials" aria-label="Reseaux sociaux">
+                <a href="#" aria-label="LinkedIn"><i class="ri-linkedin-fill" aria-hidden="true"></i></a>
+                <a href="#" aria-label="Instagram"><i class="ri-instagram-line" aria-hidden="true"></i></a>
+                <a href="#" aria-label="Facebook"><i class="ri-facebook-fill" aria-hidden="true"></i></a>
+                <a href="#" aria-label="X"><i class="ri-twitter-x-line" aria-hidden="true"></i></a>
+              </div>
+            </div>
+
+            <form class="form-card js-form reveal" data-success="Merci, votre demande a ete envoyee. L'equipe Sykoti vous recontactera.">
+              <div class="form-grid two">
+                <div class="field">
+                  <label for="name">Nom complet</label>
+                  <input id="name" name="name" type="text" placeholder="Votre nom" required />
+                </div>
+                <div class="field">
+                  <label for="email">Email</label>
+                  <input id="email" name="email" type="email" placeholder="vous@exemple.com" required />
+                </div>
+              </div>
+              <div class="form-grid two">
+                <div class="field">
+                  <label for="profile">Profil</label>
+                  <select id="profile" name="profile" required>
+                    <option value="">Choisir</option>
+                    <option>Jeune / Etudiant</option>
+                    <option>Parent</option>
+                    <option>Partenaire</option>
+                    <option>Ambassadeur volontaire</option>
+                  </select>
+                </div>
+                <div class="field">
+                  <label for="city">Ville / Pays</label>
+                  <input id="city" name="city" type="text" placeholder="Douala, Cameroun" />
+                </div>
+              </div>
+              <div class="field">
+                <label for="interest">Interet principal</label>
+                <select id="interest" name="interest" required>
+                  <option value="">Choisir</option>
+                  <option>Suivre une formation</option>
+                  <option>Rejoindre la communaute</option>
+                  <option>Devenir partenaire</option>
+                  <option>Organiser une campagne</option>
+                </select>
+              </div>
+              <div class="field">
+                <label for="message">Message</label>
+                <textarea id="message" name="message" placeholder="Dites-nous comment vous souhaitez contribuer ou participer."></textarea>
+              </div>
+              <button class="btn btn-primary" type="submit">
+                Envoyer l'inscription
+                <i class="ri-send-plane-line" aria-hidden="true"></i>
+              </button>
+            </form>
+          </div>
+        </section>
+      </main>
+
+      <footer class="footer">
+        <div class="container footer-inner">
+          <div>
+            <strong>Sykoti Cyberambassador</strong><br />
+            <span>Former, proteger, transmettre.</span>
+          </div>
+          <div class="footer-links">
+            <a href="#projet">Projet</a>
+            <a href="#formation">Formation</a>
+            <a href="#communaute">Communaute</a>
+            <a href="#contact">Contact</a>
+          </div>
+        </div>
+      </footer>
+    </div>
+
+    <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+    <script>
+      const menuButton = document.querySelector("#menuButton");
+      const navLinks = document.querySelector("#navLinks");
+      const toast = document.querySelector("#toast");
+
+      menuButton.addEventListener("click", () => {
+        const isOpen = navLinks.classList.toggle("open");
+        menuButton.setAttribute("aria-expanded", String(isOpen));
+        menuButton.innerHTML = isOpen
+          ? '<i class="ri-close-line" aria-hidden="true"></i>'
+          : '<i class="ri-menu-3-line" aria-hidden="true"></i>';
+      });
+
+      navLinks.querySelectorAll("a").forEach((link) => {
+        link.addEventListener("click", () => {
+          navLinks.classList.remove("open");
+          menuButton.setAttribute("aria-expanded", "false");
+          menuButton.innerHTML = '<i class="ri-menu-3-line" aria-hidden="true"></i>';
+        });
+      });
+
+      const observer = new IntersectionObserver(
+        (entries) => {
+          entries.forEach((entry) => {
+            if (entry.isIntersecting) {
+              entry.target.classList.add("visible");
+              observer.unobserve(entry.target);
+            }
+          });
+        },
+        { threshold: 0.12 }
+      );
+
+      document.querySelectorAll(".reveal").forEach((element) => observer.observe(element));
+
+      function showToast(message) {
+        toast.textContent = message;
+        toast.classList.add("show");
+        window.clearTimeout(showToast.timer);
+        showToast.timer = window.setTimeout(() => toast.classList.remove("show"), 4200);
+      }
+
+      document.querySelectorAll(".js-form").forEach((form) => {
+        form.addEventListener("submit", (event) => {
+          event.preventDefault();
+          if (!form.checkValidity()) {
+            form.reportValidity();
+            return;
+          }
+          showToast(form.dataset.success);
+          form.reset();
+        });
+      });
+    </script>
+  </body>
+</html>
