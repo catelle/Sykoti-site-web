@@ -745,7 +745,7 @@ p {
   align-content: end;
   gap: 8px;
   padding: 16px;
-  background: linear-gradient(180deg, rgba(13, 11, 16, 0.08) 0%, rgba(13, 11, 16, 0.46) 42%, rgba(13, 11, 16, 0.92) 100%);
+  background: linear-gradient(180deg, rgba(13, 11, 16, 0.42) 0%, rgba(13, 11, 16, 0.68) 42%, rgba(13, 11, 16, 0.96) 100%);
 }
 
 .report-overlay span,
@@ -794,14 +794,16 @@ p {
 
 .article-carousel {
   position: relative;
+  display: inline-block;
+  max-width: 100%;
 }
 
 .article-editorial {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, 200px);
+  display: flex;
+  flex-wrap: wrap;
   gap: 18px;
   align-items: start;
-  justify-content: start;
+  max-width: 100%;
 }
 
 .article-nav {
@@ -1438,6 +1440,10 @@ footer strong {
     height: 170px;
   }
 
+  .article-feature-card {
+    width: calc((100% - 12px) / 2);
+  }
+
   .report-overlay,
   .webinar-overlay,
   .article-overlay,
@@ -1500,7 +1506,12 @@ footer strong {
   }
 
   .article-carousel {
+    width: 100%;
     padding-inline: 52px;
+  }
+
+  .article-editorial {
+    width: 100%;
   }
 
   .article-nav.previous {

@@ -269,8 +269,6 @@ export function WebinarsSection({ t, webinars, onRegisterInterest }) {
 }
 
 export function ArticlesSection({ t, visibleArticles, onPrevious, onNext, onOpenArticle }) {
-  const [featuredArticle, ...sideArticles] = visibleArticles
-
   return (
     <section className="section articles-section" id="articles">
       <div className="section-heading">
@@ -283,34 +281,19 @@ export function ArticlesSection({ t, visibleArticles, onPrevious, onNext, onOpen
           &lsaquo;
         </button>
         <div className="article-editorial">
-          {featuredArticle && (
-            <article className="article-feature-card">
-              {featuredArticle.image && <img src={featuredArticle.image} alt="" />}
+          {visibleArticles.map((article) => (
+            <article className="article-feature-card" key={article.slug || article.title}>
+              {article.image && <img src={article.image} alt="" />}
               <div className="article-overlay">
-                <span>{featuredArticle.category}</span>
-                <h3>{featuredArticle.title}</h3>
-                <p>{featuredArticle.excerpt}</p>
-                <button className="mini-btn" type="button" onClick={() => onOpenArticle(featuredArticle)}>
+                <span>{article.category}</span>
+                <h3>{article.title}</h3>
+                <p>{article.excerpt}</p>
+                <button className="mini-btn" type="button" onClick={() => onOpenArticle(article)}>
                   {t.articlesRead}
                 </button>
               </div>
             </article>
-          )}
-          <div className="article-stack">
-            {sideArticles.map((article) => (
-              <article className="article-strip" key={article.slug || article.title}>
-                {article.image && <img src={article.image} alt="" />}
-                <div className="article-overlay">
-                  <span>{article.category}</span>
-                  <h3>{article.title}</h3>
-                  <p>{article.excerpt}</p>
-                  <button className="mini-btn" type="button" onClick={() => onOpenArticle(article)}>
-                    {t.articlesRead}
-                  </button>
-                </div>
-              </article>
-            ))}
-          </div>
+          ))}
         </div>
         <button className="article-nav next" type="button" aria-label={t.articleNext} onClick={onNext}>
           &rsaquo;
