@@ -125,6 +125,10 @@ img {
   background: var(--rose-soft);
 }
 
+.nav-drawer-support {
+  display: none;
+}
+
 .language-toggle {
   flex: 0 0 auto;
   min-height: 40px;
@@ -643,14 +647,16 @@ p {
 
 .report-showcase {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fit, 200px);
   gap: 18px;
+  justify-content: start;
 }
 
 .report-card {
   position: relative;
   overflow: hidden;
-  height: 245px;
+  width: 200px;
+  height: 200px;
   animation: fade-up 0.65s ease both;
 }
 
@@ -675,7 +681,7 @@ p {
 
 .report-card h3 {
   max-width: 680px;
-  font-size: clamp(1.15rem, 1.9vw, 1.7rem);
+  font-size: 1.05rem;
   line-height: 1.03;
 }
 
@@ -699,14 +705,16 @@ p {
 
 .webinar-grid {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fit, 200px);
   gap: 18px;
+  justify-content: start;
 }
 
 .webinar-card {
   position: relative;
   overflow: hidden;
-  height: 105px;
+  width: 200px;
+  height: 200px;
   border: 1px solid var(--line);
   border-radius: 8px;
   background: var(--panel);
@@ -715,8 +723,8 @@ p {
 }
 
 .webinar-card img {
-  width: 100px;
-  height: 100px;
+  width: 100%;
+  height: 100%;
   object-fit: cover;
   transition: transform 0.45s ease;
 }
@@ -735,8 +743,8 @@ p {
   z-index: 1;
   display: grid;
   align-content: end;
-  gap: 10px;
-  padding: clamp(16px, 2.4vw, 24px);
+  gap: 8px;
+  padding: 16px;
   background: linear-gradient(180deg, rgba(13, 11, 16, 0.08) 0%, rgba(13, 11, 16, 0.46) 42%, rgba(13, 11, 16, 0.92) 100%);
 }
 
@@ -759,11 +767,13 @@ p {
 .report-overlay p,
 .webinar-overlay p,
 .article-overlay p {
+  display: none;
   margin-bottom: 0;
   color: rgba(255, 255, 255, 0.78);
 }
 
 .report-overlay small {
+  display: none;
   color: rgba(255, 255, 255, 0.68);
 }
 
@@ -788,9 +798,10 @@ p {
 
 .article-editorial {
   display: grid;
-  grid-template-columns: minmax(0, 1.2fr) minmax(280px, 0.8fr);
+  grid-template-columns: repeat(auto-fit, 200px);
   gap: 18px;
-  align-items: stretch;
+  align-items: start;
+  justify-content: start;
 }
 
 .article-nav {
@@ -823,7 +834,8 @@ p {
 }
 
 .article-feature-card {
-  height: 280px;
+  width: 200px;
+  height: 200px;
   animation: fade-up 0.65s ease both;
 }
 
@@ -836,17 +848,19 @@ p {
 }
 
 .article-feature-card h3 {
-  font-size: clamp(1.45rem, 2.7vw, 2.5rem);
+  font-size: 1.05rem;
   line-height: 1.04;
 }
 
 .article-stack {
   display: grid;
-  gap: 14px;
+  grid-template-columns: repeat(auto-fit, 200px);
+  gap: 18px;
 }
 
 .article-strip {
-  height: 133px;
+  width: 200px;
+  height: 200px;
   animation: fade-up 0.65s ease both;
 }
 
@@ -856,7 +870,7 @@ p {
 }
 
 .article-strip .article-overlay {
-  padding: 18px;
+  padding: 16px;
 }
 
 .article-strip p {
@@ -1154,33 +1168,100 @@ footer strong {
 }
 
 @media (max-width: 1020px) {
+  .navbar {
+    gap: 10px;
+    min-height: 72px;
+    padding: 10px 14px;
+  }
+
+  .brand {
+    flex: 1 1 auto;
+    gap: 9px;
+    max-width: none;
+  }
+
+  .brand img {
+    width: 38px;
+    height: 38px;
+  }
+
+  .brand small {
+    max-width: 170px;
+    font-size: 0.56rem;
+    line-height: 1.25;
+  }
+
   .menu-toggle {
+    order: 4;
     display: block;
+    flex-basis: 40px;
+    width: 40px;
+    height: 40px;
   }
 
   .navbar nav {
-    position: fixed;
-    top: 76px;
-    right: 16px;
-    left: 16px;
-    display: none;
-    padding: 14px;
-    border: 1px solid var(--line);
-    border-radius: 8px;
-    background: #17121a;
+    position: absolute;
+    top: 100%;
+    right: 0;
+    left: 0;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+    max-height: calc(100svh - 72px);
+    padding: 12px 14px 16px;
+    overflow: auto;
+    border-top: 1px solid var(--line);
+    border-bottom: 1px solid var(--line);
+    background: rgba(13, 11, 16, 0.97);
     box-shadow: var(--shadow);
+    opacity: 0;
+    pointer-events: none;
+    transform: translateY(-14px);
+    transition: opacity 0.22s ease, transform 0.22s ease, visibility 0.22s ease;
+    visibility: hidden;
   }
 
   .navbar nav.open {
-    display: grid;
+    opacity: 1;
+    pointer-events: auto;
+    transform: translateY(0);
+    visibility: visible;
   }
 
   .navbar nav button {
-    justify-content: flex-start;
+    justify-content: center;
+    min-height: 38px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.04);
+    font-size: 0.9rem;
+  }
+
+  .nav-drawer-support {
+    display: inline-flex;
+    grid-column: 1 / -1;
+    color: var(--white);
+    background: var(--rose);
+    box-shadow: 0 12px 28px rgba(167, 46, 92, 0.22);
+  }
+
+  .nav-drawer-support:hover {
+    color: var(--white);
+    background: #c53a6f;
+  }
+
+  .nav-support-link {
+    display: none;
   }
 
   .navbar-actions {
-    margin-left: auto;
+    order: 2;
+    margin-left: 0;
+    gap: 6px;
+  }
+
+  .navbar-actions .nav-support {
+    display: none;
   }
 
   .hero,
@@ -1250,22 +1331,43 @@ footer strong {
 }
 
 @media (max-width: 640px) {
+  .navbar {
+    gap: 8px;
+  }
+
+  .brand {
+    flex-basis: 0;
+  }
+
   .brand img {
+    width: 34px;
+    height: 34px;
+  }
+
+  .brand span {
+    font-size: 0.96rem;
+  }
+
+  .brand small {
+    display: none;
+  }
+
+  .menu-toggle {
+    flex-basis: 38px;
     width: 38px;
     height: 38px;
   }
 
-  .brand small {
-    max-width: 190px;
-    font-size: 0.57rem;
+  .nav-support {
+    max-width: none;
+    min-height: 38px;
+    padding: 0 12px;
+    font-size: 0.86rem;
   }
 
-  .nav-support {
-    max-width: 116px;
+  .language-toggle {
+    min-height: 38px;
     padding: 0 12px;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
   }
 
   h1 {
@@ -1308,41 +1410,57 @@ footer strong {
     padding-block: 72px;
   }
 
-  .impact-strip,
-  .report-showcase,
-  .webinar-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+  .impact-strip {
+    grid-template-columns: 1fr;
   }
 
   .report-showcase,
-  .article-editorial {
+  .webinar-grid,
+  .article-editorial,
+  .article-stack {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    justify-content: stretch;
+  }
+
+  .report-showcase,
+  .webinar-grid,
+  .article-editorial,
+  .article-stack {
     gap: 12px;
   }
 
   .report-card,
   .webinar-card,
-  .article-feature-card {
-    height: 230px;
+  .article-feature-card,
+  .article-strip {
+    width: 100%;
+    max-width: none;
+    height: 170px;
   }
 
   .report-overlay,
   .webinar-overlay,
-  .article-overlay {
-    padding: 16px;
-  }
-
-  .report-overlay p,
-  .webinar-overlay p,
-  .article-overlay p {
-    display: none;
-  }
-
-  .report-overlay small {
-    display: none;
-  }
-
+  .article-overlay,
   .article-strip .article-overlay {
-    padding: 16px;
+    gap: 6px;
+    padding: 12px;
+  }
+
+  .report-card h3,
+  .webinar-overlay h3,
+  .article-feature-card h3,
+  .article-strip h3 {
+    font-size: 0.95rem;
+  }
+
+  .report-actions {
+    gap: 6px;
+  }
+
+  .report-actions .mini-btn {
+    min-height: 30px;
+    padding: 0 9px;
+    font-size: 0.75rem;
   }
 
   .program-panel {

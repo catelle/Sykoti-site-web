@@ -26,10 +26,18 @@ export function Header({ t, language, menuOpen, onToggleMenu, onSwitchLanguage, 
 
       <nav className={menuOpen ? 'open' : ''} aria-label="Main navigation">
         {t.navItems.map(([label, id]) => (
-          <button key={id} type="button" onClick={() => onNavigate(id)}>
+          <button
+            className={id === 'support' ? 'nav-support-link' : undefined}
+            key={id}
+            type="button"
+            onClick={() => onNavigate(id)}
+          >
             {label}
           </button>
         ))}
+        <button className="nav-drawer-support" type="button" onClick={() => onNavigate('support')}>
+          {t.supportButton}
+        </button>
       </nav>
 
       <div className="navbar-actions">
