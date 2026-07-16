@@ -1,5 +1,7 @@
 import mongoose from 'mongoose'
 
+let connectionPromise
+
 export async function connectDb() {
   const uri = process.env.MONGODB_URI
 
@@ -8,6 +10,19 @@ export async function connectDb() {
   }
 
   mongoose.set('strictQuery', true)
-  await mongoose.connect(uri)
-  console.log('MongoDB connected')
+  if (mongoose.connection.readyState === 1) return mongoose.connection
+
+  if (!connectionPromise) {
+    connectionPromise = mongoose.connect(uri)
+      .then(() => {
+        console.log('MongoDB connected')
+        return mongoose.connection
+      })
+      .catch((error) => {
+        connectionPromise = undefined
+        throw error
+      })
+  }
+
+  return connectionPromise
 }
