@@ -54,7 +54,44 @@ router.get('/webinars', asyncRoute(async (_req, res) => {
 }))
 
 router.post('/cyberambassador/inscriptions', asyncRoute(async (req, res) => {
-  const inscription = await CyberambassadorInscription.create(req.body)
+  const body = req.body || {}
+  const birthDate = new Date(body.dateOfBirth)
+  if (Number.isNaN(birthDate.getTime())) {
+    return res.status(400).json({ message: 'Une date de naissance valide est requise.' })
+  }
+
+  const today = new Date()
+  let age = today.getUTCFullYear() - birthDate.getUTCFullYear()
+  const monthDifference = today.getUTCMonth() - birthDate.getUTCMonth()
+  if (monthDifference < 0 || (monthDifference === 0 && today.getUTCDate() < birthDate.getUTCDate())) age -= 1
+
+  if (age < 15 || age > 24) {
+    return res.status(400).json({ message: 'Les candidats doivent avoir entre 15 et 24 ans.' })
+  }
+
+  const declarations = body.declarations || {}
+  if (!declarations.accurate || !declarations.noSelectionGuarantee || !declarations.participationCommitment) {
+    return res.status(400).json({ message: 'Toutes les déclarations doivent être acceptées.' })
+  }
+
+  if (!Array.isArray(body.interests) || body.interests.length === 0) {
+    return res.status(400).json({ message: 'Sélectionnez au moins un centre d’intérêt lié au programme.' })
+  }
+
+  const email = String(body.email || '').trim().toLowerCase()
+  const existingApplication = await CyberambassadorInscription.findOne({ email, cohort: 'pilot-2026' })
+  if (existingApplication) {
+    return res.status(409).json({ message: 'Une candidature a déjà été envoyée avec cette adresse e-mail.' })
+  }
+
+  const inscription = await CyberambassadorInscription.create({
+    ...body,
+    email,
+    age,
+    dateOfBirth: birthDate,
+    cohort: 'pilot-2026',
+    status: 'new',
+  })
   res.status(201).json(inscription)
 }))
 

@@ -90,7 +90,7 @@ export function HeroSection({ t, reportCount, onNavigate }) {
           <button className="btn primary" type="button" onClick={() => onNavigate('programs')}>
             {t.primaryCta}
           </button>
-          <a className="btn secondary" href="cyberambassador.html">
+          <a className="btn secondary" href="/cyberambassador/">
             {t.secondaryCta}
           </a>
         </div>
@@ -167,7 +167,7 @@ export function FellowshipSection({ t }) {
         <div className="fellowship-card">
           <strong>{t.platformTitle}</strong>
           <p>{t.platformText}</p>
-          <a className="btn primary" href="cyberambassador.html">{t.platformCta}</a>
+          <a className="btn primary" href="/cyberambassador/">{t.platformCta}</a>
         </div>
       </div>
       <div className="platform-preview" aria-label={t.platformTitle}>
@@ -176,7 +176,7 @@ export function FellowshipSection({ t }) {
           <span />
           <span />
         </div>
-        <iframe src="cyberambassador.html" title={t.platformTitle} loading="lazy" />
+        <iframe src="/cyberambassador/" title={t.platformTitle} loading="lazy" />
         <div className="platform-screen-list">
           {t.platformScreens.map((screen) => (
             <span key={screen}>{screen}</span>

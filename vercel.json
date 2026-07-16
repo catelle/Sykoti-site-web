@@ -1,0 +1,20 @@
+{
+  "rewrites": [
+    {
+      "source": "/cyberambassador",
+      "destination": "/cyberambassador/index.html"
+    },
+    {
+      "source": "/cyberambassador/",
+      "destination": "/cyberambassador/index.html"
+    },
+    {
+      "source": "/cyberambassador/regiistration",
+      "destination": "/cyberambassador/regiistration/index.html"
+    },
+    {
+      "source": "/cyberambassador/regiistration/",
+      "destination": "/cyberambassador/regiistration/index.html"
+    }
+  ]
+}

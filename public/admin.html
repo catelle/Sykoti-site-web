@@ -168,12 +168,70 @@
         margin: 10px 0;
       }
 
+      .applicant-card summary {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        cursor: pointer;
+        list-style: none;
+      }
+
+      .applicant-card summary::-webkit-details-marker {
+        display: none;
+      }
+
+      .applicant-card summary h3 {
+        margin: 0 0 4px;
+      }
+
+      .applicant-card summary p {
+        margin: 0;
+      }
+
+      .applicant-details {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 18px;
+        padding: 20px 0 6px;
+        margin-top: 16px;
+        border-top: 1px solid var(--line);
+      }
+
+      .applicant-answer {
+        grid-column: 1 / -1;
+        padding: 14px;
+        border-radius: 10px;
+        background: var(--soft);
+      }
+
+      .applicant-answer strong,
+      .applicant-field strong {
+        display: block;
+        margin-bottom: 5px;
+        color: var(--rose);
+        font-size: 0.78rem;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+      }
+
+      .applicant-answer p,
+      .applicant-field p {
+        margin: 0;
+        color: var(--dark);
+        white-space: pre-wrap;
+      }
+
       @media (max-width: 840px) {
         main {
           grid-template-columns: 1fr;
         }
 
         .grid {
+          grid-template-columns: 1fr;
+        }
+
+        .applicant-details {
           grid-template-columns: 1fr;
         }
       }
@@ -335,7 +393,7 @@
           reports: [['Publish', 'published']],
           articles: [['Publish', 'published']],
           webinars: [['Open', 'open'], ['Close', 'closed']],
-          inscriptions: [['Review', 'reviewing'], ['Accept', 'accepted'], ['Reject', 'rejected']],
+          inscriptions: [['Examiner', 'reviewing'], ['Présélectionner', 'shortlisted'], ['Refuser', 'declined']],
           supports: [['Mark received', 'received'], ['Cancel', 'cancelled']],
         }[active] || []
 
@@ -397,12 +455,12 @@
         try {
           const data = await apiJson(`${API}/admin/${active}`, { headers: headers() })
           items.innerHTML = data.length
-            ? data.map((item) => `
+            ? data.map((item) => active === 'inscriptions' ? inscriptionCard(item) : `
               <article>
-                <h3>${item.title || item.fullName || item.name || item.email || item._id}</h3>
-                ${item.coverUrl ? `<img class="preview" src="${assetUrl(item.coverUrl)}" alt="" />` : ''}
-                <p>${item.description || item.excerpt || item.motivation || item.message || item.theme || ''}</p>
-                <small>Status: ${item.status || 'n/a'} / ${item.email || item.source || item.contributionType || ''}</small>
+                <h3>${escapeHtml(item.title || item.fullName || item.name || item.email || item._id)}</h3>
+                ${item.coverUrl ? `<img class="preview" src="${escapeHtml(assetUrl(item.coverUrl))}" alt="" />` : ''}
+                <p>${escapeHtml(item.description || item.excerpt || item.motivation || item.message || item.theme || '')}</p>
+                <small>Status: ${escapeHtml(item.status || 'n/a')} / ${escapeHtml(item.email || item.source || item.contributionType || '')}</small>
                 <div class="row">
                   ${actionButtons(item._id)}
                 </div>
@@ -412,6 +470,87 @@
         } catch (error) {
           items.innerHTML = `<p class="status">${error.message}</p>`
         }
+      }
+
+      function escapeHtml(value) {
+        return String(value ?? '').replace(/[&<>'"]/g, (character) => ({
+          '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;',
+        })[character])
+      }
+
+      function applicantField(label, value, wide = false) {
+        return `<div class="${wide ? 'applicant-answer' : 'applicant-field'}"><strong>${escapeHtml(label)}</strong><p>${escapeHtml(value || '—')}</p></div>`
+      }
+
+      function applicationValueLabel(value) {
+        return ({
+          Female: 'Femme', Male: 'Homme', 'Prefer not to say': 'Préfère ne pas répondre', Other: 'Autre',
+          'Secondary school student': 'Élève du secondaire', 'University student': 'Étudiant(e)',
+          Employed: 'Employé(e)', 'Self-employed': 'Travailleur indépendant',
+          'Not currently studying or employed': 'Sans emploi ni études actuellement',
+          Primary: 'Primaire', 'Lower secondary': 'Premier cycle du secondaire',
+          'Upper secondary': 'Second cycle du secondaire', 'Technical / vocational': 'Technique / professionnel',
+          'University undergraduate': 'Études universitaires en cours', 'University graduate': 'Diplômé(e) de l’université',
+          Laptop: 'Ordinateur portable', Tablet: 'Tablette', Desktop: 'Ordinateur de bureau',
+          Stable: 'Stable', Moderate: 'Moyen', Limited: 'Limité',
+          'Understanding how the digital world works': 'Comprendre le fonctionnement du monde numérique',
+          'Protecting yourself online': 'Se protéger en ligne',
+          'Learning practical digital skills': 'Acquérir des compétences numériques pratiques',
+          'Becoming a digital leader': 'Devenir un leader numérique',
+          'Helping your community': 'Aider sa communauté',
+          'Meeting other young people': 'Rencontrer d’autres jeunes',
+          'In person (Yaounde)': 'En présentiel à Yaoundé', Online: 'En ligne',
+          'Not sure yet': 'Ne sait pas encore',
+        })[value] || value
+      }
+
+      function applicationStatusLabel(status) {
+        return ({
+          new: 'Nouvelle',
+          reviewing: 'En cours d’examen',
+          shortlisted: 'Présélectionnée',
+          accepted: 'Acceptée',
+          declined: 'Refusée',
+          rejected: 'Rejetée',
+        })[status] || status || 'Nouvelle'
+      }
+
+      function inscriptionCard(item) {
+        const location = [item.city, item.region, item.country].filter(Boolean).join(', ')
+        const education = [applicationValueLabel(item.currentOccupation), item.school, item.fieldOfStudy, applicationValueLabel(item.highestEducation)].filter(Boolean).join(' / ')
+        const access = [applicationValueLabel(item.mainDevice), `Internet : ${applicationValueLabel(item.internetAccess) || 'non précisé'}`].filter(Boolean).join(' / ')
+        const company = [item.selectedCompany, item.otherCompany].filter(Boolean).join(' — ')
+        const submitted = item.createdAt ? new Date(item.createdAt).toLocaleString('fr-FR') : 'Date inconnue'
+
+        return `<article class="applicant-card">
+          <details>
+            <summary>
+              <div>
+                <h3>${escapeHtml(item.fullName)}</h3>
+                <p>${escapeHtml(item.email)} · ${escapeHtml(location)}</p>
+              </div>
+              <div><span class="status">${escapeHtml(applicationStatusLabel(item.status))}</span><br><small>${escapeHtml(submitted)}</small></div>
+            </summary>
+            <div class="applicant-details">
+              ${applicantField('Téléphone', item.phone)}
+              ${applicantField('Âge / Date de naissance', `${item.age || '—'} / ${item.dateOfBirth ? new Date(item.dateOfBirth).toLocaleDateString('fr-FR') : '—'}`)}
+              ${applicantField('Genre', applicationValueLabel(item.gender))}
+              ${applicantField('Localisation', location)}
+              ${applicantField('Éducation', education)}
+              ${applicantField('Accès numérique', access)}
+              ${applicantField('Pourquoi devenir CyberAmbassadeur ?', item.motivation, true)}
+              ${applicantField('Centres d’intérêt', [...(item.interests || []).map(applicationValueLabel), item.otherInterest].filter(Boolean).join(', '), true)}
+              ${applicantField('Contribution communautaire', item.communityExperience, true)}
+              ${applicantField('Question sur le numérique', item.digitalQuestion, true)}
+              ${applicantField('Entreprise choisie', company)}
+              ${applicantField('Participation à la cérémonie', applicationValueLabel(item.graduationAttendance))}
+              ${applicantField('Pourquoi cette entreprise ?', item.companyReason, true)}
+              ${applicantField('Motivation face aux difficultés', item.challengeMotivation, true)}
+              ${applicantField('Pourquoi sélectionner cette personne ?', item.selectionReason, true)}
+            </div>
+          </details>
+          <div class="row">${actionButtons(item._id)}</div>
+        </article>`
       }
 
       window.updateStatus = async (id, status) => {
