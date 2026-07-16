@@ -1,88 +1,13 @@
 <!DOCTYPE html>
 <html lang="fr">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Candidature CyberAmbassador | SykotiCenter</title>
-  <meta name="robots" content="noindex, follow" />
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
-  <link href="https://cdn.jsdelivr.net/npm/remixicon@4.5.0/fonts/remixicon.css" rel="stylesheet" />
-  <link rel="stylesheet" href="/cyberambassador/styles.css" />
-</head>
-<body class="application-page">
-  <header class="site-nav light"><div class="container nav-inner"><a class="brand" href="/cyberambassador/"><img src="/img/logo.png" alt="SykotiCenter" /><strong>CyberAmbassador<small>Candidature</small></strong></a><a class="btn btn-outline" href="/cyberambassador/"><i class="ri-arrow-left-line"></i> Présentation du programme</a></div></header>
-
-  <main id="applicationContent">
-    <div class="container"><header class="application-intro"><span class="kicker">Cohorte pilote</span><h1>Formulaire de candidature CyberAmbassador</h1><p>Merci de l’intérêt que vous portez au programme CyberAmbassador. Veuillez remplir ce formulaire avec soin. Seuls les candidats présélectionnés seront invités à l’étape suivante.</p><p class="time-note"><i class="ri-time-line"></i> Temps estimé : 10 à 15 minutes</p></header></div>
-    <div id="formAlert" class="form-alert" role="alert"></div>
-
-    <form id="applicationForm" class="container application-form">
-      <section class="form-section"><div class="form-heading"><span class="form-number">1</span><div><h2>Informations personnelles</h2><p>Indiquez-nous comment vous identifier et vous contacter.</p></div></div><div class="field-grid">
-        <label class="field full">Nom complet <span class="required">*</span><input name="fullName" autocomplete="name" required /></label>
-        <label class="field">Date de naissance <span class="required">*</span><input id="dateOfBirth" name="dateOfBirth" type="date" required /></label>
-        <label class="field">Âge <span class="required">*</span><input id="age" name="age" readonly placeholder="Calculé à partir de la date de naissance" /></label>
-        <label class="field">Genre <span class="field-hint">Facultatif</span><select name="gender"><option value="">Sélectionnez une option</option><option value="Female">Femme</option><option value="Male">Homme</option><option value="Prefer not to say">Préfère ne pas répondre</option><option value="Other">Autre</option></select></label>
-        <label class="field">Pays <span class="required">*</span><input name="country" autocomplete="country-name" required /></label>
-        <label class="field">Région <span class="required">*</span><input name="region" required /></label>
-        <label class="field">Ville <span class="required">*</span><input name="city" autocomplete="address-level2" required /></label>
-        <label class="field">Numéro de téléphone <span class="required">*</span><input name="phone" type="tel" autocomplete="tel" required /></label>
-        <label class="field">Adresse e-mail <span class="required">*</span><input name="email" type="email" autocomplete="email" required /></label>
-      </div></section>
-
-      <section class="form-section"><div class="form-heading"><span class="form-number">2</span><div><h2>Éducation</h2></div></div><div class="field-grid">
-        <label class="field">Occupation actuelle <span class="required">*</span><select name="currentOccupation" required><option value="">Sélectionnez une option</option><option value="Secondary school student">Élève du secondaire</option><option value="University student">Étudiant(e)</option><option value="Employed">Employé(e)</option><option value="Self-employed">Travailleur indépendant</option><option value="Not currently studying or employed">Sans emploi ni études actuellement</option><option value="Other">Autre</option></select></label>
-        <label class="field">École / Université <span class="required">*</span><input name="school" required /></label>
-        <label class="field">Domaine d’études <span class="required">*</span><input name="fieldOfStudy" required /></label>
-        <label class="field">Niveau d’études le plus élevé <span class="required">*</span><select name="highestEducation" required><option value="">Sélectionnez une option</option><option value="Primary">Primaire</option><option value="Lower secondary">Premier cycle du secondaire</option><option value="Upper secondary">Second cycle du secondaire</option><option value="Technical / vocational">Technique / professionnel</option><option value="University undergraduate">Études universitaires en cours</option><option value="University graduate">Diplômé(e) de l’université</option><option value="Other">Autre</option></select></label>
-      </div></section>
-
-      <section class="form-section"><div class="form-heading"><span class="form-number">3</span><div><h2>Accès numérique</h2><p>Parlez-nous de l’équipement que vous utiliserez pendant le programme.</p></div></div><div class="field-grid">
-        <label class="field">Quel appareil utiliserez-vous principalement ? <span class="required">*</span><select name="mainDevice" required><option value="">Sélectionnez une option</option><option>Smartphone</option><option value="Laptop">Ordinateur portable</option><option value="Tablet">Tablette</option><option value="Desktop">Ordinateur de bureau</option></select></label>
-        <label class="field">Comment décririez-vous votre accès à Internet ? <span class="required">*</span><select name="internetAccess" required><option value="">Sélectionnez une option</option><option value="Stable">Stable</option><option value="Moderate">Moyen</option><option value="Limited">Limité</option></select></label>
-      </div></section>
-
-      <section class="form-section"><div class="form-heading"><span class="form-number">4</span><div><h2>Motivation</h2></div></div><div class="field-grid">
-        <label class="field full">Pourquoi souhaitez-vous devenir CyberAmbassadeur ? <span class="required">*</span><textarea name="motivation" maxlength="3000" required></textarea></label>
-        <fieldset class="field full"><legend>Qu’est-ce qui vous intéresse le plus dans ce programme ? <span class="required">*</span></legend><div class="choice-grid">
-          <label class="choice"><input type="checkbox" name="interests" value="Understanding how the digital world works" />Comprendre le fonctionnement du monde numérique</label>
-          <label class="choice"><input type="checkbox" name="interests" value="Protecting yourself online" />Se protéger en ligne</label>
-          <label class="choice"><input type="checkbox" name="interests" value="Learning practical digital skills" />Acquérir des compétences numériques pratiques</label>
-          <label class="choice"><input type="checkbox" name="interests" value="Becoming a digital leader" />Devenir un leader numérique</label>
-          <label class="choice"><input type="checkbox" name="interests" value="Helping your community" />Aider sa communauté</label>
-          <label class="choice"><input type="checkbox" name="interests" value="Meeting other young people" />Rencontrer d’autres jeunes</label>
-          <label class="choice"><input id="otherInterestToggle" type="checkbox" name="interests" value="Other" />Autre</label>
-        </div></fieldset>
-        <label id="otherInterestField" class="field full" hidden>Autre centre d’intérêt <input name="otherInterest" /></label>
-      </div></section>
-
-      <section class="form-section"><div class="form-heading"><span class="form-number">5</span><div><h2>Leadership et engagement communautaire</h2></div></div><label class="field">Parlez-nous d’une initiative, d’une activité ou d’une expérience au cours de laquelle vous avez apporté une contribution positive à votre école, votre famille, votre communauté ou un autre groupe. <span class="required">*</span><span class="field-hint">Cette expérience peut être liée ou non à la technologie.</span><textarea name="communityExperience" maxlength="3000" required></textarea></label></section>
-
-      <section class="form-section"><div class="form-heading"><span class="form-number">6</span><div><h2>Curiosité</h2></div></div><div class="field-grid">
-        <label class="field full">Quelle est la question sur le monde numérique à laquelle vous avez toujours souhaité obtenir une réponse ? <span class="required">*</span><textarea name="digitalQuestion" maxlength="3000" required></textarea></label>
-        <label class="field">Si vous pouviez passer une journée dans une entreprise pour comprendre son fonctionnement, laquelle choisiriez-vous ? <span class="required">*</span><select id="selectedCompany" name="selectedCompany" required><option value="">Sélectionnez une option</option><option>Google</option><option>WhatsApp</option><option>Meta</option><option>TikTok</option><option>Microsoft</option><option>OpenAI</option><option value="Other">Autre</option></select></label>
-        <label id="otherCompanyField" class="field" hidden>Autre entreprise <input name="otherCompany" /></label>
-        <label class="field full">Pourquoi ? <span class="required">*</span><textarea name="companyReason" maxlength="3000" required></textarea></label>
-      </div></section>
-
-      <section class="form-section"><div class="form-heading"><span class="form-number">7</span><div><h2>Engagement</h2><p>Ce programme exige une participation régulière pendant un mois.</p></div></div><div class="field-grid">
-        <label class="field full">Qu’est-ce qui vous motive à terminer un programme même lorsqu’il devient difficile ? <span class="required">*</span><textarea name="challengeMotivation" maxlength="3000" required></textarea></label>
-        <label class="field full">Pourquoi devriez-vous être sélectionné(e) pour cette première cohorte CyberAmbassador ? <span class="required">*</span><textarea name="selectionReason" maxlength="3000" required></textarea></label>
-      </div></section>
-
-      <section class="form-section"><div class="form-heading"><span class="form-number">8</span><div><h2>Participation</h2><p>La formation se déroule en ligne. La cérémonie de remise des diplômes sera hybride, en ligne et en présentiel à Yaoundé.</p></div></div><label class="field">Si vous êtes sélectionné(e), comment pensez-vous assister à la cérémonie de remise des diplômes ? <span class="required">*</span><select name="graduationAttendance" required><option value="">Sélectionnez une option</option><option value="In person (Yaounde)">En présentiel à Yaoundé</option><option value="Online">En ligne</option><option value="Not sure yet">Je ne sais pas encore</option></select></label></section>
-
-      <section class="form-section"><div class="form-heading"><span class="form-number">9</span><div><h2>Déclaration</h2></div></div><div class="field-grid">
-        <label class="choice field full"><input name="accurate" type="checkbox" required />Je certifie que les informations fournies dans cette candidature sont exactes. <span class="required">*</span></label>
-        <label class="choice field full"><input name="noSelectionGuarantee" type="checkbox" required />Je comprends que le dépôt d’une candidature ne garantit pas ma sélection. <span class="required">*</span></label>
-        <label class="choice field full"><input name="participationCommitment" type="checkbox" required />Si je suis sélectionné(e), je m’engage à participer activement pendant toute la durée du programme. <span class="required">*</span></label>
-      </div></section>
-
-      <div class="submit-panel"><p>Veuillez relire vos réponses avant l’envoi. Vous ne pourrez plus les modifier par la suite.</p><button id="submitButton" class="btn btn-white" type="submit">Envoyer ma candidature <i class="ri-arrow-right-line"></i></button></div>
-    </form>
-  </main>
-  <footer class="footer"><div class="container footer-inner"><strong>SykotiCenter CyberAmbassador</strong><span>Former des citoyens numériques responsables.</span></div></footer>
-  <script src="/cyberambassador/application.js"></script>
-</body>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="robots" content="noindex" />
+    <meta http-equiv="refresh" content="0; url=/cyberambassador/registration/" />
+    <title>Redirection vers le formulaire CyberAmbassador</title>
+    <script>window.location.replace('/cyberambassador/registration/')</script>
+  </head>
+  <body>
+    <p><a href="/cyberambassador/registration/">Accéder au formulaire de candidature</a></p>
+  </body>
 </html>

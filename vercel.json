@@ -1,4 +1,16 @@
 {
+  "redirects": [
+    {
+      "source": "/cyberambassador/regiistration",
+      "destination": "/cyberambassador/registration/",
+      "permanent": true
+    },
+    {
+      "source": "/cyberambassador/regiistration/",
+      "destination": "/cyberambassador/registration/",
+      "permanent": true
+    }
+  ],
   "rewrites": [
     {
       "source": "/cyberambassador",
@@ -9,12 +21,12 @@
       "destination": "/cyberambassador/index.html"
     },
     {
-      "source": "/cyberambassador/regiistration",
-      "destination": "/cyberambassador/regiistration/index.html"
+      "source": "/cyberambassador/registration",
+      "destination": "/cyberambassador/registration/index.html"
     },
     {
-      "source": "/cyberambassador/regiistration/",
-      "destination": "/cyberambassador/regiistration/index.html"
+      "source": "/cyberambassador/registration/",
+      "destination": "/cyberambassador/registration/index.html"
     }
   ]
 }

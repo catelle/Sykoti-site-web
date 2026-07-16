@@ -6,6 +6,8 @@ const base = process.env.VITE_BASE_PATH || (process.env.VERCEL ? '/' : '/Sykoti-
 const cleanPageRoutes = {
   '/cyberambassador': '/cyberambassador/index.html',
   '/cyberambassador/': '/cyberambassador/index.html',
+  '/cyberambassador/registration': '/cyberambassador/registration/index.html',
+  '/cyberambassador/registration/': '/cyberambassador/registration/index.html',
   '/cyberambassador/regiistration': '/cyberambassador/regiistration/index.html',
   '/cyberambassador/regiistration/': '/cyberambassador/regiistration/index.html',
 }
