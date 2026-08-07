@@ -1,4 +1,3 @@
-/* global process */
 import express from 'express'
 import multer from 'multer'
 import Article from '../models/Article.js'
@@ -11,21 +10,10 @@ const router = express.Router()
 const upload = multer({ dest: 'server/uploads/' })
 const asyncRoute = (handler) => (req, res, next) => Promise.resolve(handler(req, res, next)).catch(next)
 const CYBERAMBASSADOR_APPLICATIONS_OPEN = false
-const CYBERCOMP_PASS = process.env.CYBERCOMP_PASS || 'CYBERAMBASSADORPILOT'
-const CYBERCOMP_TEST_EMAIL = String(process.env.CYBERCOMP_TEST_EMAIL || '').trim().toLowerCase()
 const CYBERCOMP_TRANSMISSION_INDEXES = [5, 7, 11, 15, 20]
 
-function validCybercompAccess(body) {
-  return String(body?.pass || '').trim() === CYBERCOMP_PASS
-}
-
 router.post('/cyberambassador/cybercomp/access', asyncRoute(async (req, res) => {
-  if (!validCybercompAccess(req.body)) return res.status(401).json({ message: 'Pass CyberAmbassador incorrect.' })
-
   const email = String(req.body?.email || '').trim().toLowerCase()
-  if (CYBERCOMP_TEST_EMAIL && email === CYBERCOMP_TEST_EMAIL) {
-    return res.json({ applicant: { fullName: 'Test CyberComp', email, cybercompTaken: false, feedbackSubmitted: false, testMode: true } })
-  }
   const applicant = await CyberambassadorInscription.findOne({ email, cohort: 'pilot-2026' }).select('fullName email cybercomp.taken cybercomp.feedback.submittedAt')
   if (!applicant) return res.status(404).json({ message: 'Cette adresse e-mail ne correspond pas à une candidature CyberAmbassador.' })
   if (applicant.cybercomp?.taken) return res.status(409).json({ message: 'Vous avez déjà passé le challenge CyberComp. Une seule participation est autorisée.' })
@@ -48,14 +36,11 @@ router.get('/cyberambassador/cybercomp/feedback', asyncRoute(async (_req, res) =
 }))
 
 router.post('/cyberambassador/cybercomp/feedback', asyncRoute(async (req, res) => {
-  if (!validCybercompAccess(req.body)) return res.status(401).json({ message: 'Pass CyberAmbassador incorrect.' })
   const email = String(req.body?.email || '').trim().toLowerCase()
   const comment = String(req.body?.comment || '').trim()
   const rating = Number(req.body?.rating)
   if (comment.length < 5 || comment.length > 700) return res.status(400).json({ message: 'Votre commentaire doit contenir entre 5 et 700 caractères.' })
   if (!Number.isInteger(rating) || rating < 1 || rating > 5) return res.status(400).json({ message: 'Choisissez une note entre 1 et 5.' })
-  if (CYBERCOMP_TEST_EMAIL && email === CYBERCOMP_TEST_EMAIL) return res.status(201).json({ feedback: { comment, rating, submittedAt: new Date(), testMode: true } })
-
   const applicant = await CyberambassadorInscription.findOneAndUpdate(
     { email, cohort: 'pilot-2026', 'cybercomp.taken': true },
     { $set: { 'cybercomp.feedback': { comment, rating, submittedAt: new Date() } } },
@@ -66,8 +51,6 @@ router.post('/cyberambassador/cybercomp/feedback', asyncRoute(async (req, res) =
 }))
 
 router.post('/cyberambassador/cybercomp/results', asyncRoute(async (req, res) => {
-  if (!validCybercompAccess(req.body)) return res.status(401).json({ message: 'Pass CyberAmbassador incorrect.' })
-
   const email = String(req.body?.email || '').trim().toLowerCase()
   const answers = Array.isArray(req.body?.answers) ? req.body.answers.map(Number) : []
   const supportedQuestionCounts = [21, 26]
@@ -91,8 +74,6 @@ router.post('/cyberambassador/cybercomp/results', asyncRoute(async (req, res) =>
         : 'Hautement spécialisé'
   const domains = Array.isArray(req.body?.domains) ? req.body.domains : []
   if (domains.length !== 5) return res.status(400).json({ message: 'Les résultats des cinq domaines sont requis.' })
-  if (CYBERCOMP_TEST_EMAIL && email === CYBERCOMP_TEST_EMAIL) return res.json({ applicant: { fullName: 'Test CyberComp', email, cybercomp: { taken: true, takenAt: new Date(), phase: req.body?.phase === 'Finale' ? 'Finale' : 'Initiale', total, level: expectedLevel, answers, domains }, testMode: true } })
-
   const applicant = await CyberambassadorInscription.findOneAndUpdate(
     { email, cohort: 'pilot-2026', 'cybercomp.taken': { $ne: true } },
     { $set: { 'cybercomp.taken': true, 'cybercomp.takenAt': new Date(), 'cybercomp.phase': req.body?.phase === 'Finale' ? 'Finale' : 'Initiale', 'cybercomp.total': total, 'cybercomp.level': expectedLevel, 'cybercomp.answers': answers, 'cybercomp.domains': domains.map((domain) => ({ name: String(domain.name || ''), score: Number(domain.score), max: Number(domain.max) })) } },

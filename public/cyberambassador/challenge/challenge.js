@@ -1,4 +1,3 @@
-const ACCESS_CODE = 'CYBERAMBASSADORPILOT'
 const API_ROOT = ['localhost', '127.0.0.1'].includes(window.location.hostname)
   ? 'http://localhost:4001/api'
   : `${window.location.origin}/api`
@@ -53,26 +52,10 @@ const nextButton = document.querySelector('#nextButton')
 const previousButton = document.querySelector('#previousButton')
 const quizError = document.querySelector('#quizError')
 
-document.querySelector('#accessForm').addEventListener('submit', (event) => {
-  event.preventDefault()
-  const input = document.querySelector('#accessCode')
-  const error = document.querySelector('#accessError')
-  if (input.value.trim() !== ACCESS_CODE) {
-    error.textContent = 'Pass incorrect. Vérifiez le code et réessayez.'
-    input.focus()
-    return
-  }
-  error.textContent = ''
+document.querySelector('#openQuizButton').addEventListener('click', () => {
   gateView.hidden = true
   quizView.hidden = false
   window.scrollTo({ top: 0, behavior: 'smooth' })
-})
-
-document.querySelector('#toggleCode').addEventListener('click', () => {
-  const input = document.querySelector('#accessCode')
-  const showing = input.type === 'text'
-  input.type = showing ? 'password' : 'text'
-  document.querySelector('#toggleCode i').className = showing ? 'ri-eye-line' : 'ri-eye-off-line'
 })
 
 function renderQuestion() {
@@ -102,7 +85,7 @@ nextButton.addEventListener('click', async () => {
     nextButton.disabled = true
     nextButton.innerHTML = '<i class="ri-loader-4-line"></i> Vérification...'
     try {
-      const response = await fetch(`${API_ROOT}/cyberambassador/cybercomp/access`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ pass: ACCESS_CODE, email: emailInput.value }) })
+      const response = await fetch(`${API_ROOT}/cyberambassador/cybercomp/access`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email: emailInput.value }) })
       const data = await response.json().catch(() => ({}))
       if (!response.ok) throw new Error(data.message || 'Impossible de vérifier cette candidature.')
       state.profile = { name: nameInput.value.trim(), email: data.applicant.email, feedbackSubmitted: data.applicant.feedbackSubmitted, age: document.querySelector('#participantAge').value, city: document.querySelector('#participantCity').value.trim(), phase: document.querySelector('#assessmentPhase').value }
@@ -159,7 +142,7 @@ async function showResults() {
   nextButton.disabled = true
   nextButton.innerHTML = '<i class="ri-loader-4-line"></i> Enregistrement...'
   try {
-    const response = await fetch(`${API_ROOT}/cyberambassador/cybercomp/results`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ pass: ACCESS_CODE, email: state.profile.email, phase: state.profile.phase, answers: state.answers, domains: domainScores.map(({ name, score, max }) => ({ name, score, max })) }) })
+    const response = await fetch(`${API_ROOT}/cyberambassador/cybercomp/results`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email: state.profile.email, phase: state.profile.phase, answers: state.answers, domains: domainScores.map(({ name, score, max }) => ({ name, score, max })) }) })
     const data = await response.json().catch(() => ({}))
     if (!response.ok) throw new Error(data.message || 'Vos résultats n’ont pas pu être enregistrés.')
   } catch (error) {
@@ -291,7 +274,7 @@ document.querySelector('#feedbackForm').addEventListener('submit', async (event)
   submitButton.disabled = true
   submitButton.innerHTML = '<i class="ri-loader-4-line"></i> Publication...'
   try {
-    const response = await fetch(`${API_ROOT}/cyberambassador/cybercomp/feedback`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ pass: ACCESS_CODE, email: state.profile.email, rating, comment }) })
+    const response = await fetch(`${API_ROOT}/cyberambassador/cybercomp/feedback`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email: state.profile.email, rating, comment }) })
     const data = await response.json().catch(() => ({}))
     if (!response.ok) throw new Error(data.message || 'Votre commentaire n’a pas pu être publié.')
     state.profile.feedbackSubmitted = true

@@ -157,13 +157,9 @@ fieldset { margin: 0; padding: 0; border: 0; }
 .honesty-note p { margin: 0; font-size: 14px; line-height: 1.65; }
 .honesty-note strong { display: block; margin-bottom: 2px; }
 .challenge-duration { display: flex; justify-content: center; gap: 7px; align-items: center; font-size: 14px; }
-.access-form { display: grid; gap: 10px; margin-top: 2px; text-align: left; }
-.access-input { position: relative; }
-.access-input input { padding-right: 52px; }
-.access-input button { position: absolute; top: 5px; right: 5px; width: 42px; height: 40px; border: 0; border-radius: 9px; color: var(--muted); background: transparent; cursor: pointer; }
-.access-form .btn { margin-top: 4px; }
 .inline-error { min-height: 22px; margin: 0; color: #b91c1c; font-size: 14px; font-weight: 700; }
 .privacy-note { margin: 18px 0 0; color: var(--muted); font-size: 12px; text-align: center; }
+.gate-start { width: 100%; margin-top: 24px; }
 .quiz-layout { display: grid; grid-template-columns: minmax(230px, .7fr) minmax(0, 1.7fr); gap: 28px; align-items: start; }
 .quiz-sidebar { position: sticky; top: 22px; padding: 28px; border-radius: var(--radius); color: var(--white); background: var(--rose-dark); }
 .quiz-sidebar h2 { margin: 10px 0 24px; line-height: 1.2; }
