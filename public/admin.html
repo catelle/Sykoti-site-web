@@ -168,6 +168,46 @@
         margin: 10px 0;
       }
 
+      .applicant-stats {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(135px, 1fr));
+        gap: 10px;
+        margin: 0 0 18px;
+      }
+
+      .stat-filter {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        min-height: 76px;
+        padding: 14px;
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        text-align: left;
+        background: var(--white);
+      }
+
+      .stat-filter:hover,
+      .stat-filter.active {
+        border-color: var(--rose);
+        color: var(--rose);
+        background: #fff7fa;
+      }
+
+      .stat-filter.active {
+        box-shadow: inset 0 0 0 1px var(--rose);
+      }
+
+      .stat-filter span {
+        color: var(--muted);
+        font-size: 0.82rem;
+      }
+
+      .stat-filter strong {
+        font-size: 1.65rem;
+      }
+
       .applicant-card summary {
         display: flex;
         align-items: center;
@@ -222,6 +262,34 @@
         white-space: pre-wrap;
       }
 
+      .cybercomp-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        min-height: 32px;
+        padding: 0 12px;
+        color: #176b3a;
+        background: #dcfce7;
+        font-size: 0.78rem;
+      }
+
+      dialog {
+        width: min(760px, calc(100% - 28px));
+        max-height: 88vh;
+        padding: 0;
+        overflow: auto;
+        border: 0;
+        border-radius: 18px;
+        box-shadow: 0 24px 80px rgba(0,0,0,.3);
+      }
+
+      dialog::backdrop { background: rgba(16,16,20,.62); }
+      .result-modal { padding: 26px; }
+      .result-modal header { margin: -26px -26px 24px; padding: 22px 26px; }
+      .result-modal table { width: 100%; border-collapse: collapse; }
+      .result-modal th, .result-modal td { padding: 10px; border-bottom: 1px solid var(--line); text-align: left; }
+      .modal-close { color: var(--white); background: rgba(255,255,255,.15); }
+
       @media (max-width: 840px) {
         main {
           grid-template-columns: 1fr;
@@ -263,13 +331,16 @@
         <h1 id="resourceTitle">Reports</h1>
         <p class="status" id="resourceStatus"></p>
         <form id="createForm"></form>
+        <div class="applicant-stats" id="applicantStats" hidden></div>
         <div class="items" id="items"></div>
       </section>
     </main>
 
+    <dialog id="cybercompDialog"><div class="result-modal" id="cybercompModalContent"></div></dialog>
+
     <script>
       const API = window.location.origin.includes('517')
-        ? 'http://localhost:4000/api'
+        ? 'http://localhost:4001/api'
         : `${window.location.origin}/api`
       const API_ORIGIN = API.replace(/\/api$/, '')
 
@@ -283,10 +354,13 @@
 
       let token = localStorage.getItem('sykotiAdminToken') || ''
       let active = 'reports'
+      let applicantFilter = 'all'
+      let loadedApplicants = []
 
       const nav = document.querySelector('#resourceNav')
       const items = document.querySelector('#items')
       const createForm = document.querySelector('#createForm')
+      const applicantStats = document.querySelector('#applicantStats')
       const title = document.querySelector('#resourceTitle')
       const resourceStatus = document.querySelector('#resourceStatus')
       const loginStatus = document.querySelector('#loginStatus')
@@ -303,6 +377,7 @@
         button.textContent = resource
         button.onclick = () => {
           active = resource
+          applicantFilter = 'all'
           render()
         }
         nav.appendChild(button)
@@ -448,14 +523,26 @@
         }
 
         if (!token) {
+          applicantStats.hidden = true
           items.innerHTML = '<p class="status">Login required.</p>'
           return
         }
 
         try {
           const data = await apiJson(`${API}/admin/${active}`, { headers: headers() })
-          items.innerHTML = data.length
-            ? data.map((item) => active === 'inscriptions' ? inscriptionCard(item) : `
+          const visibleData = active === 'inscriptions'
+            ? data.filter((item) => applicantMatchesFilter(item, applicantFilter))
+            : data
+
+          if (active === 'inscriptions') {
+            loadedApplicants = data
+            renderApplicantStats(data)
+          } else {
+            applicantStats.hidden = true
+          }
+
+          items.innerHTML = visibleData.length
+            ? visibleData.map((item) => active === 'inscriptions' ? inscriptionCard(item) : `
               <article>
                 <h3>${escapeHtml(item.title || item.fullName || item.name || item.email || item._id)}</h3>
                 ${item.coverUrl ? `<img class="preview" src="${escapeHtml(assetUrl(item.coverUrl))}" alt="" />` : ''}
@@ -466,10 +553,46 @@
                 </div>
               </article>
             `).join('')
-            : '<p class="muted">No items yet.</p>'
+            : `<p class="muted">${active === 'inscriptions' && data.length ? 'Aucune candidature ne correspond à ce filtre.' : 'No items yet.'}</p>`
         } catch (error) {
+          applicantStats.hidden = true
           items.innerHTML = `<p class="status">${error.message}</p>`
         }
+      }
+
+      function normalizedApplicationStatus(item) {
+        return item.status || 'new'
+      }
+
+      function applicantMatchesFilter(item, filter) {
+        const status = normalizedApplicationStatus(item)
+        if (filter === 'all') return true
+        if (filter === 'declined') return status === 'declined' || status === 'rejected'
+        return status === filter
+      }
+
+      function renderApplicantStats(data) {
+        const filters = [
+          ['all', 'Toutes'],
+          ['new', 'Nouvelles'],
+          ['reviewing', 'En examen'],
+          ['shortlisted', 'Présélectionnées'],
+          ['accepted', 'Acceptées'],
+          ['declined', 'Refusées'],
+        ]
+
+        applicantStats.hidden = false
+        applicantStats.innerHTML = filters.map(([filter, label]) => {
+          const count = data.filter((item) => applicantMatchesFilter(item, filter)).length
+          return `<button class="stat-filter${applicantFilter === filter ? ' active' : ''}" type="button" data-applicant-filter="${filter}" aria-pressed="${applicantFilter === filter}"><span>${label}</span><strong>${count}</strong></button>`
+        }).join('')
+
+        applicantStats.querySelectorAll('[data-applicant-filter]').forEach((button) => {
+          button.onclick = () => {
+            applicantFilter = button.dataset.applicantFilter
+            render()
+          }
+        })
       }
 
       function escapeHtml(value) {
@@ -549,8 +672,18 @@
               ${applicantField('Pourquoi sélectionner cette personne ?', item.selectionReason, true)}
             </div>
           </details>
-          <div class="row">${actionButtons(item._id)}</div>
+          <div class="row">${item.cybercomp?.taken ? `<button class="cybercomp-badge" type="button" onclick="showCybercompResult('${item._id}')">✓ CyberComp effectué · ${item.cybercomp.total}/${(item.cybercomp.answers || []).length * 4 || 84}</button>` : ''}${actionButtons(item._id)}</div>
         </article>`
+      }
+
+      window.showCybercompResult = (id) => {
+        const item = loadedApplicants.find((applicant) => applicant._id === id)
+        if (!item?.cybercomp?.taken) return
+        const result = item.cybercomp
+        const dialog = document.querySelector('#cybercompDialog')
+        const maximum = (result.answers || []).length * 4 || 84
+        document.querySelector('#cybercompModalContent').innerHTML = `<header><div><strong>Résultat CyberComp</strong><div>${escapeHtml(item.fullName)}</div></div><button class="modal-close" type="button" onclick="document.querySelector('#cybercompDialog').close()">Fermer</button></header><h2>${escapeHtml(result.level)} · ${escapeHtml(result.total)} / ${maximum}</h2><p>${escapeHtml(result.phase || 'Initiale')} · ${result.takenAt ? escapeHtml(new Date(result.takenAt).toLocaleString('fr-FR')) : 'Date inconnue'}</p><table><thead><tr><th>Domaine</th><th>Score</th><th>Pourcentage</th></tr></thead><tbody>${(result.domains || []).map((domain) => `<tr><td>${escapeHtml(domain.name)}</td><td>${escapeHtml(domain.score)} / ${escapeHtml(domain.max)}</td><td>${domain.max ? Math.round(domain.score / domain.max * 100) : 0} %</td></tr>`).join('')}</tbody></table><h3>Détail des ${(result.answers || []).length} réponses</h3><p>${(result.answers || []).map((answer, index) => `${index + 1}: ${answer}/4`).join(' · ')}</p>`
+        dialog.showModal()
       }
 
       window.updateStatus = async (id, status) => {

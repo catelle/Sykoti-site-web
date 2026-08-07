@@ -1,5 +1,5 @@
 const API_ROOT = ['localhost', '127.0.0.1'].includes(window.location.hostname)
-  ? 'http://localhost:4000/api'
+  ? 'http://localhost:4001/api'
   : `${window.location.origin}/api`
 
 const form = document.querySelector('#applicationForm')

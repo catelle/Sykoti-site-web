@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Challenge CyberComp | CyberAmbassador</title>
+  <meta name="description" content="Évaluez vos compétences numériques avec le challenge CyberComp et découvrez votre profil numérique." />
+  <meta name="robots" content="noindex, nofollow" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link href="https://cdn.jsdelivr.net/npm/remixicon@4.5.0/fonts/remixicon.css" rel="stylesheet" />
+  <link rel="stylesheet" href="/cyberambassador/styles.css" />
+</head>
+<body class="application-page challenge-page">
+  <header class="site-nav light">
+    <div class="container nav-inner">
+      <a class="brand" href="/cyberambassador/"><img src="/img/logo.png" alt="SykotiCenter" /><strong>CyberComp<small>Challenge CyberAmbassador</small></strong></a>
+      <a class="btn btn-outline" href="/cyberambassador/"><i class="ri-arrow-left-line"></i> Le programme</a>
+    </div>
+  </header>
+
+  <main>
+    <section class="challenge-shell" id="gateView">
+      <div class="container">
+        <div class="gate-card">
+          <div class="gate-visual">
+            <div class="gate-visual-top"><span><i class="ri-sparkling-line"></i> Challenge CyberComp</span><strong>Cyber<br>Ambassador</strong></div>
+            <div class="gate-visual-copy"><span class="visual-kicker">Votre parcours commence ici</span><h2>Comprendre.<br>Progresser.<br>Transmettre.</h2><div class="visual-meta"><span><strong>26</strong> situations</span><span><strong>5</strong> domaines</span><span><strong>10</strong> minutes</span></div></div>
+          </div>
+          <div class="gate-panel">
+            <div class="gate-heading"><span class="challenge-emblem"><i class="ri-shield-keyhole-line"></i></span><div><span class="kicker">Accès pilote</span><h1>Découvrez où vous en êtes.</h1></div></div>
+            <p class="gate-lead">Faites le point sur vos habitudes numériques et découvrez comment la formation peut vous aider à avancer.</p>
+            <div class="honesty-note"><i class="ri-heart-3-line"></i><p><strong>Soyez simplement vous-même.</strong> Il n’y a rien à réussir. Choisissez ce que vous faites vraiment aujourd’hui, pas ce qui semble être la meilleure réponse.</p></div>
+            <form id="accessForm" class="access-form">
+              <label for="accessCode">Votre pass CyberAmbassador</label>
+              <div class="access-input"><input id="accessCode" type="password" autocomplete="off" required placeholder="Entrez votre pass" /><button type="button" id="toggleCode" aria-label="Afficher le pass"><i class="ri-eye-line"></i></button></div>
+              <p class="inline-error" id="accessError" role="alert" aria-live="polite"></p>
+              <button class="btn btn-primary" type="submit">Commencer mon profil <i class="ri-arrow-right-line"></i></button>
+            </form>
+            <p class="privacy-note"><i class="ri-lock-2-line"></i> Accès réservé aux candidats de la cohorte pilote.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="challenge-shell" id="quizView" hidden>
+      <div class="container quiz-layout">
+        <aside class="quiz-sidebar">
+          <span class="kicker">Challenge CyberComp</span>
+          <h2>Votre auto-évaluation</h2>
+          <div class="progress-copy"><strong id="progressText">Question 1 sur 26</strong><span id="progressPercent">0 %</span></div>
+          <div class="progress-track"><span id="progressBar"></span></div>
+          <p>Répondez selon vos habitudes et vos actions réelles, pas selon ce que vous pensez devoir répondre.</p>
+          <div class="domain-label" id="domainLabel"></div>
+        </aside>
+        <div class="quiz-card">
+          <form id="quizForm">
+            <div class="profile-fields" id="profileFields">
+              <span class="question-number">Avant de commencer</span>
+              <h1>À qui appartient ce profil ?</h1>
+              <p>Ces informations servent uniquement à personnaliser votre rapport téléchargé.</p>
+              <div class="field-grid">
+                <div class="field full"><label for="participantEmail">E-mail utilisé pour votre candidature <span class="required">*</span></label><input id="participantEmail" type="email" required autocomplete="email" placeholder="vous@exemple.com" /></div>
+                <div class="field full"><label for="participantName">Nom et prénom <span class="required">*</span></label><input id="participantName" required autocomplete="name" placeholder="Votre nom complet" /></div>
+                <div class="field"><label for="participantAge">Âge</label><input id="participantAge" type="number" min="10" max="100" inputmode="numeric" /></div>
+                <div class="field"><label for="participantCity">Ville / quartier</label><input id="participantCity" autocomplete="address-level2" /></div>
+                <div class="field full"><label for="assessmentPhase">Type d’évaluation</label><select id="assessmentPhase"><option value="Initiale">Initiale</option><option value="Finale">Finale</option></select></div>
+              </div>
+            </div>
+            <div id="questionView" hidden></div>
+            <p class="inline-error" id="quizError" role="alert" aria-live="polite"></p>
+            <div class="quiz-actions"><button class="btn btn-outline" type="button" id="previousButton" hidden><i class="ri-arrow-left-line"></i> Précédent</button><button class="btn btn-primary" type="button" id="nextButton">Commencer <i class="ri-arrow-right-line"></i></button></div>
+          </form>
+        </div>
+      </div>
+    </section>
+
+    <section class="challenge-shell result-shell" id="resultView" hidden>
+      <div class="container">
+        <div class="result-hero">
+          <span class="result-icon"><i class="ri-award-line"></i></span><span class="kicker">Votre profil CyberComp</span>
+          <h1 id="resultLevel"></h1><p id="resultSummary"></p>
+          <div class="score-pill"><strong id="resultScore"></strong><span>points</span></div>
+        </div>
+        <div class="result-grid" id="domainResults"></div>
+        <div class="result-guidance"><div><span class="kicker">Et maintenant ?</span><h2 id="guidanceTitle"></h2><p id="guidanceText"></p></div><i class="ri-compass-3-line"></i></div>
+        <div class="result-actions"><button class="btn btn-primary" id="downloadButton"><i class="ri-download-2-line"></i> Télécharger mes résultats (PDF)</button><button class="btn btn-outline" id="printButton"><i class="ri-printer-line"></i> Imprimer</button></div>
+      </div>
+    </section>
+  </main>
+  <dialog class="feedback-dialog" id="feedbackDialog">
+    <form class="feedback-form" id="feedbackForm">
+      <button class="feedback-close" type="button" id="feedbackClose" aria-label="Fermer"><i class="ri-close-line"></i></button>
+      <span class="challenge-emblem"><i class="ri-chat-heart-line"></i></span>
+      <span class="kicker">Votre avis compte</span>
+      <h2>Comment avez-vous trouvé le challenge ?</h2>
+      <p>Votre commentaire aidera d’autres jeunes à découvrir CyberComp et nous permettra d’améliorer l’expérience.</p>
+      <fieldset class="rating-field"><legend>Votre note</legend><div class="star-rating" role="radiogroup" aria-label="Votre note sur cinq">
+        <input type="hidden" name="rating" id="ratingValue" value="">
+        <button class="star-button" type="button" data-rating="1" role="radio" aria-checked="false" aria-label="1 étoile"><i class="ri-star-fill"></i></button>
+        <button class="star-button" type="button" data-rating="2" role="radio" aria-checked="false" aria-label="2 étoiles"><i class="ri-star-fill"></i></button>
+        <button class="star-button" type="button" data-rating="3" role="radio" aria-checked="false" aria-label="3 étoiles"><i class="ri-star-fill"></i></button>
+        <button class="star-button" type="button" data-rating="4" role="radio" aria-checked="false" aria-label="4 étoiles"><i class="ri-star-fill"></i></button>
+        <button class="star-button" type="button" data-rating="5" role="radio" aria-checked="false" aria-label="5 étoiles"><i class="ri-star-fill"></i></button>
+      </div></fieldset>
+      <label for="feedbackComment">Votre commentaire</label><textarea id="feedbackComment" minlength="5" maxlength="700" required placeholder="Partagez ce que vous avez appris ou ressenti..."></textarea>
+      <p class="field-hint">Votre nom de candidature sera affiché avec ce commentaire sur le site.</p>
+      <p class="inline-error" id="feedbackError" role="alert"></p>
+      <button class="btn btn-primary" id="feedbackSubmit" type="submit">Publier mon commentaire <i class="ri-send-plane-line"></i></button>
+    </form>
+  </dialog>
+  <footer class="footer"><div class="container footer-inner"><strong>SykotiCenter CyberAmbassador</strong><span>Référentiel CyberComp — adapté de DigComp 2.2.</span></div></footer>
+  <script src="/cyberambassador/challenge/challenge.js"></script>
+</body>
+</html>

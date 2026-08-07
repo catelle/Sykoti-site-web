@@ -35,7 +35,7 @@ This project includes an Express + MongoDB API for managing SykotiCenter content
    npm run server
    ```
 
-The API runs on `http://localhost:4000` by default.
+The API runs on `http://localhost:4001` by default.
 
 ## Admin Console
 

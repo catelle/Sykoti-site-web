@@ -43,6 +43,24 @@ const inscriptionSchema = new mongoose.Schema(
       enum: ['new', 'reviewing', 'shortlisted', 'accepted', 'declined', 'rejected'],
       default: 'new',
     },
+    cybercomp: {
+      taken: { type: Boolean, default: false },
+      takenAt: Date,
+      phase: { type: String, enum: ['Initiale', 'Finale'] },
+      total: { type: Number, min: 21, max: 104 },
+      level: { type: String, enum: ['Fondation', 'Intermédiaire', 'Avancé', 'Hautement spécialisé'] },
+      answers: [{ type: Number, min: 1, max: 4 }],
+      domains: [{
+        name: { type: String, trim: true },
+        score: Number,
+        max: Number,
+      }],
+      feedback: {
+        comment: { type: String, trim: true, maxlength: 700 },
+        rating: { type: Number, min: 1, max: 5 },
+        submittedAt: Date,
+      },
+    },
   },
   { timestamps: true }
 )

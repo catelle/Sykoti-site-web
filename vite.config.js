@@ -8,6 +8,8 @@ const cleanPageRoutes = {
   '/cyberambassador/': '/cyberambassador/index.html',
   '/cyberambassador/registration': '/cyberambassador/registration/index.html',
   '/cyberambassador/registration/': '/cyberambassador/registration/index.html',
+  '/cyberambassador/challenge': '/cyberambassador/challenge/index.html',
+  '/cyberambassador/challenge/': '/cyberambassador/challenge/index.html',
   '/cyberambassador/regiistration': '/cyberambassador/regiistration/index.html',
   '/cyberambassador/regiistration/': '/cyberambassador/regiistration/index.html',
 }
