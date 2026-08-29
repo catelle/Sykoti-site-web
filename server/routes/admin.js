@@ -9,6 +9,7 @@ import CyberambassadorInscription from '../models/CyberambassadorInscription.js'
 import Report from '../models/Report.js'
 import Support from '../models/Support.js'
 import Webinar from '../models/Webinar.js'
+import Engagement from '../models/Engagement.js'
 import { requireAdmin } from '../middleware/auth.js'
 
 const router = express.Router()
@@ -21,7 +22,21 @@ const collections = {
   webinars: Webinar,
   inscriptions: CyberambassadorInscription,
   supports: Support,
+  engagements: Engagement,
 }
+
+router.get('/engagements-dashboard/stats', requireAdmin, asyncRoute(async (_req, res) => {
+  const start = new Date(); start.setHours(0, 0, 0, 0)
+  const [total, today, consented, approved, pending, byLocation, byTheme, byAge] = await Promise.all([
+    Engagement.countDocuments(), Engagement.countDocuments({ createdAt: { $gte: start } }),
+    Engagement.countDocuments({ consentToPublish: true }), Engagement.countDocuments({ status: 'approved' }),
+    Engagement.countDocuments({ status: 'pending' }),
+    Engagement.aggregate([{ $group: { _id: '$location', count: { $sum: 1 } } }, { $sort: { count: -1 } }]),
+    Engagement.aggregate([{ $group: { _id: '$theme', count: { $sum: 1 } } }, { $sort: { count: -1 } }]),
+    Engagement.aggregate([{ $match: { ageRange: { $ne: '' } } }, { $group: { _id: '$ageRange', count: { $sum: 1 } } }, { $sort: { count: -1 } }]),
+  ])
+  res.json({ total, today, consented, approved, pending, byLocation, byTheme, byAge })
+}))
 
 router.post('/login', asyncRoute(async (req, res) => {
   const { email, password } = req.body
@@ -98,7 +113,12 @@ router.patch('/:resource/:id', asyncRoute(async (req, res) => {
   const Model = collections[req.params.resource]
   if (!Model) return res.status(404).json({ message: 'Unknown resource' })
 
-  const item = await Model.findByIdAndUpdate(req.params.id, req.body, { new: true, runValidators: true })
+  const body = { ...req.body }
+  if (req.params.resource === 'engagements') {
+    if (!['pending', 'approved', 'rejected', 'private'].includes(body.status)) delete body.status
+    if (body.status === 'approved') body.approvedAt = new Date()
+  }
+  const item = await Model.findByIdAndUpdate(req.params.id, body, { new: true, runValidators: true })
   if (!item) return res.status(404).json({ message: 'Item not found' })
   res.json(item)
 }))
