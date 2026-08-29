@@ -289,6 +289,11 @@
       .result-modal table { width: 100%; border-collapse: collapse; }
       .result-modal th, .result-modal td { padding: 10px; border-bottom: 1px solid var(--line); text-align: left; }
       .modal-close { color: var(--white); background: rgba(255,255,255,.15); }
+      .cybercomp-answer-level { color: var(--rose); font-weight: 600; }
+      .engagement-filters { display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:0 0 18px }
+      .engagement-filters input,.engagement-filters select { margin:0 }
+      .dashboard-breakdown { display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:18px }
+      .dashboard-breakdown article { padding:12px }.dashboard-breakdown h3 { margin:0 0 8px;font-size:.88rem }.dashboard-breakdown p { margin:3px 0;font-size:.8rem }
 
       @media (max-width: 840px) {
         main {
@@ -302,6 +307,7 @@
         .applicant-details {
           grid-template-columns: 1fr;
         }
+        .engagement-filters,.dashboard-breakdown { grid-template-columns:1fr; }
       }
     </style>
   </head>
@@ -350,12 +356,39 @@
         webinars: ['title', 'description', 'scheduledAt', 'speakers', 'coverUrl', 'registrationUrl', 'status'],
         inscriptions: [],
         supports: [],
+        engagements: [],
       }
+
+      // Mirrors public/cyberambassador/challenge/challenge.js `questions` so admin can show each selected answer's full text.
+      const cybercompQuestions = [
+        [0, '1.1', 'Une alerte virale annonce la fermeture immédiate d’un service public. Que faites-vous habituellement ?', ['Je la crois si elle vient d’une personne de confiance ou circule beaucoup.', 'Je cherche le titre sur Internet et lis quelques publications qui en parlent.', 'Je retrouve la source originale, contrôle la date et le contexte, puis confirme auprès d’une source indépendante.', 'Je réalise systématiquement ces contrôles, vérifie aussi les images et conserve les preuves permettant à quelqu’un de reproduire ma vérification.']],
+        [0, '1.2', 'Vous devez utiliser un chiffre important dans une présentation. Comment le validez-vous ?', ['Je reprends le chiffre s’il paraît cohérent et vient d’un site connu.', 'Je vérifie l’auteur, la date et compare avec un autre site.', 'Je retrouve les données ou l’étude d’origine, examine la méthode et croise plusieurs sources indépendantes.', 'Je documente la méthode, les limites et les conflits d’intérêts, puis je peux défendre ou corriger l’analyse devant un groupe.']],
+        [0, '1.3', 'Votre téléphone ou ordinateur est perdu. Quelles données pouvez-vous récupérer ?', ['Je risque de perdre la plupart de mes fichiers ou je ne sais pas.', 'Je retrouve certains fichiers envoyés par messagerie ou stockés en ligne.', 'Mes fichiers importants sont organisés et sauvegardés automatiquement ; j’ai déjà testé une restauration.', 'J’applique la règle de plusieurs copies sur supports distincts, chiffre les données sensibles et teste régulièrement la restauration.']],
+        [1, '2.1', 'Vous devez annoncer une décision sensible à une équipe. Comment choisissez-vous le canal ?', ['J’utilise l’application que tout le monde consulte le plus.', 'Je choisis entre appel, message ou e-mail selon l’urgence.', 'J’évalue urgence, confidentialité, accessibilité et besoin de trace, puis j’adapte le message aux destinataires.', 'Je définis et fais appliquer une pratique d’équipe combinant canaux, règles d’escalade, accessibilité et archivage.']],
+        [1, '2.2', 'Avant de partager un document avec un groupe externe, que contrôlez-vous ?', ['Je vérifie surtout que le lien s’ouvre.', 'Je relis le document et choisis les destinataires.', 'Je contrôle droits d’accès, données cachées, source, licence et durée du partage.', 'J’ai déjà conçu et expliqué à un groupe une procédure de publication, validation, retrait et gestion d’incident.']],
+        [1, '2.3', 'Une personne débute avec un service public numérique. Que savez-vous faire ?', ['Je peux lui indiquer le site ou lui conseiller de demander de l’aide.', 'Je peux lui montrer les étapes que je connais en manipulant à sa place.', 'Je lui explique les étapes avec des mots simples, la laisse pratiquer et vérifie qu’elle peut recommencer seule.', 'J’ai déjà animé un accompagnement structuré, adapté aux difficultés du public, puis mesuré son autonomie.']],
+        [1, '2.4', 'Vous collaborez à distance sur un projet. Quelle pratique avez-vous réellement mise en place ?', ['Nous échangeons surtout des fichiers dans une messagerie.', 'J’utilise un document partagé et participe aux commentaires.', 'J’organise droits, versions, tâches et règles de contribution pour éviter doublons et pertes.', 'Je coordonne régulièrement plusieurs contributeurs, traite les conflits de version et améliore le processus après bilan.']],
+        [1, '2.5', 'Un échange en ligne devient agressif. Comment intervenez-vous ?', ['Je quitte la conversation, bloque la personne ou réponds sur le même ton.', 'Je rappelle les règles de politesse ou demande à un responsable d’intervenir.', 'Je désamorce l’échange, protège la personne visée, conserve les preuves utiles et explique clairement les voies de signalement.', 'J’ai déjà formé ou accompagné un groupe à prévenir ces situations et à appliquer un protocole de modération.']],
+        [1, '2.6', 'Vous coordonnez un document contenant des données sensibles. Que faites-vous ?', ['Je l’envoie au groupe en demandant de rester discret.', 'Je partage un lien et demande de ne pas le transférer.', 'Je limite les accès, attribue le minimum de droits et retire les autorisations à la fin.', 'Je définis rôles, durée d’accès, journal de versions et protocole de fuite, puis je vérifie que l’équipe les applique.']],
+        [2, '3.1', 'Vous devez créer un contenu pour faire agir un public précis. Quelle expérience avez-vous ?', ['Je publie des photos, vidéos ou textes simples.', 'Je modifie un modèle existant pour rendre le contenu plus attractif.', 'Je pars d’un objectif et d’un public, structure le message, produis le contenu et vérifie sa compréhension.', 'Je conçois régulièrement des contenus accessibles, les teste avec le public et les améliore à partir de résultats mesurés.']],
+        [2, '3.2', 'Vous devez transformer un rapport en vidéo courte et accessible. Que savez-vous faire seul ?', ['Je copie les principales phrases dans une vidéo ou un diaporama.', 'J’assemble texte, images et musique à partir d’un modèle.', 'Je synthétise, scénarise et combine plusieurs formats avec sous-titres, attribution et cohérence visuelle.', 'Je maîtrise ce flux de production, contrôle l’accessibilité et la qualité, et peux apprendre la méthode à une autre personne.']],
+        [2, '3.3', 'Un groupe veut réutiliser images, musique et texte trouvés en ligne. Que faites-vous ?', ['Je les utilise s’ils sont accessibles publiquement.', 'Je demande de citer les auteurs lorsque leurs noms sont disponibles.', 'Je vérifie chaque licence, sa compatibilité avec l’usage et conserve la preuve de l’autorisation.', 'Je sais expliquer simplement ces choix, corriger les erreurs du groupe et lui fournir une méthode réutilisable de publication conforme.']],
+        [2, '3.4', 'Vous publiez une vidéo comportant des ressources externes. Quelle pratique appliquez-vous ?', ['Je choisis les ressources qui correspondent au message.', 'Je mentionne les auteurs dans la description.', 'Je vérifie les licences, conserve les preuves et attribue correctement chaque ressource.', 'Je contrôle aussi la compatibilité des licences, documente les transformations et justifie la licence choisie pour l’œuvre finale.']],
+        [3, '4.1', 'Quelles protections avez-vous effectivement configurées sur vos appareils ?', ['Un code simple ou une protection physique, sans réglage régulier.', 'Un verrouillage correct et des mises à jour quand elles sont proposées.', 'Mises à jour automatiques, verrouillage robuste, sauvegarde testée, double authentification et permissions contrôlées.', 'J’applique aussi chiffrement, récupération, moindre privilège et plan de réponse à incident sur plusieurs appareils.']],
+        [3, '4.2', 'Une personne connue demande en urgence des données personnelles. Que faites-vous ?', ['Je réponds si le compte ou le numéro semble correct.', 'Je pose une question de contrôle dans la même conversation.', 'Je vérifie par un canal déjà connu, transmets le strict minimum et protège le fichier.', 'J’évalue aussi base légale, conservation et destinataires, documente la décision et sais piloter le signalement d’une fuite.']],
+        [3, '4.3', 'Un jeune vous confie subir du cyberharcèlement. Que pouvez-vous faire ?', ['Je lui conseille d’ignorer les messages ou de quitter le réseau.', 'Je l’aide à bloquer le compte et à en parler à un proche.', 'Je l’écoute sans l’exposer, préserve les preuves, sécurise ses comptes et l’oriente vers les bons relais.', 'J’ai déjà accompagné ou sensibilisé des jeunes avec une méthode sûre, des limites claires et un suivi adapté.']],
+        [3, '4.4', 'Vous recevez une demande Mobile Money urgente avec un code à communiquer. Que faites-vous ?', ['Je vérifie le nom affiché avant de suivre les instructions.', 'Je pose des questions et rappelle le numéro indiqué dans le message.', 'Je ne partage aucun code, contacte la personne par un numéro déjà connu et vérifie auprès de l’opérateur.', 'Je sécurise aussi les comptes, préserve les preuves, coordonne le signalement et aide les personnes exposées sans diffuser leurs données.']],
+        [4, '5.1', 'Un appareil tombe en panne avant une activité. Comment procédez-vous ?', ['Je demande à une personne plus expérimentée de choisir quoi faire.', 'Je redémarre, vérifie les branchements et cherche le message d’erreur.', 'Je reproduis le problème, isole les causes, teste une hypothèse à la fois et documente la solution.', 'Je collecte les diagnostics, évalue le risque des corrections, prévois le retour arrière et transforme la solution en procédure testée.']],
+        [4, '5.2', 'Une association demande un nouvel outil. Comment formulez-vous une recommandation ?', ['Je recommande l’outil que je connais le mieux.', 'Je compare quelques fonctions et le prix.', 'Je recueille les besoins, contraintes, compétences et risques, puis teste les options avec de vrais utilisateurs.', 'Je conduis une analyse traçable incluant accessibilité, protection des données, coût complet, réversibilité et indicateurs de succès.']],
+        [4, '5.3', 'Vous devez résoudre un besoin sans solution évidente. Quelle pratique avez-vous ?', ['J’attends qu’une application adaptée soit recommandée.', 'J’essaie plusieurs applications ou modèles existants.', 'Je reformule le besoin, prototype une solution, la teste avec les personnes concernées et l’améliore.', 'Je mène régulièrement ce cycle, mesure les effets et transmets à d’autres une méthode qu’ils peuvent reproduire.']],
+        [4, '5.4', 'Votre équipe adopte un nouvel outil. Comment assurez-vous son appropriation ?', ['Je choisis l’outil et montre rapidement où cliquer.', 'Je fais une démonstration et reste disponible pour les questions.', 'Je diagnostique les niveaux, explique avec des exemples, fais pratiquer chacun et vérifie l’autonomie avant de partir.', 'J’ai déjà conçu et animé une formation inclusive, fourni des supports réutilisables et mesuré l’adoption pour ajuster l’accompagnement.']],
+      ]
 
       let token = localStorage.getItem('sykotiAdminToken') || ''
       let active = 'reports'
       let applicantFilter = 'all'
       let loadedApplicants = []
+      let engagementFilters = { search: '', location: '', theme: '', date: '' }
 
       const nav = document.querySelector('#resourceNav')
       const items = document.querySelector('#items')
@@ -470,6 +503,7 @@
           webinars: [['Open', 'open'], ['Close', 'closed']],
           inscriptions: [['Examiner', 'reviewing'], ['Présélectionner', 'shortlisted'], ['Refuser', 'declined']],
           supports: [['Mark received', 'received'], ['Cancel', 'cancelled']],
+          engagements: [['Approuver', 'approved'], ['Rejeter', 'rejected']],
         }[active] || []
 
         return [
@@ -485,12 +519,15 @@
 
         const fields = resources[active]
         createForm.className = active === 'articles' ? 'article-form' : ''
-        createForm.innerHTML = fields.length
+        createForm.innerHTML = active === 'engagements'
+          ? `<p>Les engagements publiables doivent être approuvés avant d’apparaître sur le mur.</p><div class="engagement-filters"><input id="engagementSearch" placeholder="Rechercher un nom ou un texte" value="${escapeHtml(engagementFilters.search)}"><select id="engagementLocation"><option value="">Tous les lieux</option></select><select id="engagementTheme"><option value="">Toutes les thématiques</option></select><input id="engagementDate" type="date" value="${escapeHtml(engagementFilters.date)}"></div>`
+          : fields.length
           ? `<div class="grid">${fields.map((field) => `<label>${field}${fieldInput(field)}</label>`).join('')}</div><button class="primary" type="submit">Create ${active}</button>`
           : '<p>This resource is collected from public forms. Use item actions below to update status.</p>'
 
         createForm.onsubmit = async (event) => {
           event.preventDefault()
+          if (active === 'engagements') return
           const form = event.currentTarget
           resourceStatus.textContent = `Creating ${active}...`
           const submitButton = form.querySelector('button[type="submit"]')
@@ -532,17 +569,20 @@
           const data = await apiJson(`${API}/admin/${active}`, { headers: headers() })
           const visibleData = active === 'inscriptions'
             ? data.filter((item) => applicantMatchesFilter(item, applicantFilter))
+            : active === 'engagements' ? data.filter(engagementMatchesFilters)
             : data
 
           if (active === 'inscriptions') {
             loadedApplicants = data
             renderApplicantStats(data)
+          } else if (active === 'engagements') {
+            await renderEngagementDashboard(data)
           } else {
             applicantStats.hidden = true
           }
 
           items.innerHTML = visibleData.length
-            ? visibleData.map((item) => active === 'inscriptions' ? inscriptionCard(item) : `
+            ? visibleData.map((item) => active === 'inscriptions' ? inscriptionCard(item) : active === 'engagements' ? engagementCard(item) : `
               <article>
                 <h3>${escapeHtml(item.title || item.fullName || item.name || item.email || item._id)}</h3>
                 ${item.coverUrl ? `<img class="preview" src="${escapeHtml(assetUrl(item.coverUrl))}" alt="" />` : ''}
@@ -558,6 +598,32 @@
           applicantStats.hidden = true
           items.innerHTML = `<p class="status">${error.message}</p>`
         }
+      }
+
+      function engagementMatchesFilters(item) {
+        const haystack = `${item.displayName || ''} ${item.commitment || ''}`.toLowerCase()
+        const itemDate = item.createdAt ? new Date(item.createdAt).toISOString().slice(0, 10) : ''
+        return (!engagementFilters.search || haystack.includes(engagementFilters.search.toLowerCase()))
+          && (!engagementFilters.location || item.location === engagementFilters.location)
+          && (!engagementFilters.theme || item.theme === engagementFilters.theme)
+          && (!engagementFilters.date || itemDate === engagementFilters.date)
+      }
+
+      async function renderEngagementDashboard(data) {
+        const stats = await apiJson(`${API}/admin/engagements-dashboard/stats`, { headers: headers() })
+        applicantStats.hidden = false
+        applicantStats.innerHTML = [['Total',stats.total],['Aujourd’hui',stats.today],['Publication acceptée',stats.consented],['Publiés',stats.approved],['En attente',stats.pending]].map(([label,count]) => `<div class="stat-filter"><span>${label}</span><strong>${count}</strong></div>`).join('')
+          + `<div class="dashboard-breakdown" style="grid-column:1/-1"><article><h3>Par lieu</h3>${stats.byLocation.map(x=>`<p>${escapeHtml(x._id || 'Non précisé')} · <b>${x.count}</b></p>`).join('')}</article><article><h3>Par thématique</h3>${stats.byTheme.map(x=>`<p>${escapeHtml(x._id)} · <b>${x.count}</b></p>`).join('')}</article><article><h3>Par tranche d’âge</h3>${stats.byAge.map(x=>`<p>${escapeHtml(x._id)} · <b>${x.count}</b></p>`).join('')}</article></div>`
+        const locations = [...new Set(data.map(x => x.location).filter(Boolean))].sort()
+        const themes = [...new Set(data.map(x => x.theme).filter(Boolean))].sort()
+        const locationSelect = document.querySelector('#engagementLocation'), themeSelect = document.querySelector('#engagementTheme')
+        locationSelect.innerHTML += locations.map(x => `<option${x===engagementFilters.location?' selected':''}>${escapeHtml(x)}</option>`).join('')
+        themeSelect.innerHTML += themes.map(x => `<option${x===engagementFilters.theme?' selected':''}>${escapeHtml(x)}</option>`).join('')
+        ;[['#engagementSearch','search'],['#engagementLocation','location'],['#engagementTheme','theme'],['#engagementDate','date']].forEach(([selector,key]) => { document.querySelector(selector).onchange = e => { engagementFilters[key]=e.target.value; render() } })
+      }
+
+      function engagementCard(item) {
+        return `<article><h3>${escapeHtml(item.displayName || 'Citoyen·ne numérique')}</h3><p><strong>${escapeHtml(item.theme)}</strong></p><p>« Je m’engage à ${escapeHtml(item.commitment)} »</p><small>${escapeHtml(item.location)} · ${item.createdAt ? escapeHtml(new Date(item.createdAt).toLocaleString('fr-FR')) : ''}<br>Âge : ${escapeHtml(item.ageRange || 'non renseigné')} · Consentement : ${item.consentToPublish ? 'oui' : 'non'} · Statut : ${escapeHtml(item.status)}</small><div class="row">${item.consentToPublish ? actionButtons(item._id) : '<span class="muted">Engagement privé — hors publication</span>'}</div></article>`
       }
 
       function normalizedApplicationStatus(item) {
@@ -682,7 +748,13 @@
         const result = item.cybercomp
         const dialog = document.querySelector('#cybercompDialog')
         const maximum = (result.answers || []).length * 4 || 84
-        document.querySelector('#cybercompModalContent').innerHTML = `<header><div><strong>Résultat CyberComp</strong><div>${escapeHtml(item.fullName)}</div></div><button class="modal-close" type="button" onclick="document.querySelector('#cybercompDialog').close()">Fermer</button></header><h2>${escapeHtml(result.level)} · ${escapeHtml(result.total)} / ${maximum}</h2><p>${escapeHtml(result.phase || 'Initiale')} · ${result.takenAt ? escapeHtml(new Date(result.takenAt).toLocaleString('fr-FR')) : 'Date inconnue'}</p><table><thead><tr><th>Domaine</th><th>Score</th><th>Pourcentage</th></tr></thead><tbody>${(result.domains || []).map((domain) => `<tr><td>${escapeHtml(domain.name)}</td><td>${escapeHtml(domain.score)} / ${escapeHtml(domain.max)}</td><td>${domain.max ? Math.round(domain.score / domain.max * 100) : 0} %</td></tr>`).join('')}</tbody></table><h3>Détail des ${(result.answers || []).length} réponses</h3><p>${(result.answers || []).map((answer, index) => `${index + 1}: ${answer}/4`).join(' · ')}</p>`
+        const answerRows = (result.answers || []).map((answer, index) => {
+          const question = cybercompQuestions[index]
+          if (!question) return ''
+          const selectedText = question[3][answer - 1] || 'Réponse inconnue'
+          return `<div class="applicant-answer"><strong>Compétence ${escapeHtml(question[1])} · ${escapeHtml(question[2])}</strong><p>${escapeHtml(selectedText)} <span class="cybercomp-answer-level">(${answer}/4)</span></p></div>`
+        }).join('')
+        document.querySelector('#cybercompModalContent').innerHTML = `<header><div><strong>Résultat CyberComp</strong><div>${escapeHtml(item.fullName)}</div></div><button class="modal-close" type="button" onclick="document.querySelector('#cybercompDialog').close()">Fermer</button></header><h2>${escapeHtml(result.level)} · ${escapeHtml(result.total)} / ${maximum}</h2><p>${escapeHtml(result.phase || 'Initiale')} · ${result.takenAt ? escapeHtml(new Date(result.takenAt).toLocaleString('fr-FR')) : 'Date inconnue'}</p><table><thead><tr><th>Domaine</th><th>Score</th><th>Pourcentage</th></tr></thead><tbody>${(result.domains || []).map((domain) => `<tr><td>${escapeHtml(domain.name)}</td><td>${escapeHtml(domain.score)} / ${escapeHtml(domain.max)}</td><td>${domain.max ? Math.round(domain.score / domain.max * 100) : 0} %</td></tr>`).join('')}</tbody></table><h3>Détail des ${(result.answers || []).length} réponses</h3><div class="applicant-details">${answerRows}</div>`
         dialog.showModal()
       }
 

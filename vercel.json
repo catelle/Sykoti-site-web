@@ -36,6 +36,38 @@
     {
       "source": "/cyberambassador/registration/",
       "destination": "/cyberambassador/registration/index.html"
+    },
+    {
+      "source": "/about",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/programs",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/cyberambassador-program",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/impact",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/resources",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/partner",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/engagement",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/mur-des-engagements",
+      "destination": "/index.html"
     }
   ]
 }

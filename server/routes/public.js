@@ -5,12 +5,64 @@ import CyberambassadorInscription from '../models/CyberambassadorInscription.js'
 import Report from '../models/Report.js'
 import Support from '../models/Support.js'
 import Webinar from '../models/Webinar.js'
+import Engagement, { ENGAGEMENT_AGE_RANGES, ENGAGEMENT_THEMES } from '../models/Engagement.js'
 
 const router = express.Router()
 const upload = multer({ dest: 'server/uploads/' })
 const asyncRoute = (handler) => (req, res, next) => Promise.resolve(handler(req, res, next)).catch(next)
 const CYBERAMBASSADOR_APPLICATIONS_OPEN = false
 const CYBERCOMP_TRANSMISSION_INDEXES = [5, 7, 11, 15, 20]
+const engagementSubmissions = new Map()
+
+router.get('/engagements/summary', asyncRoute(async (_req, res) => {
+  const [total, shared] = await Promise.all([
+    Engagement.countDocuments(),
+    Engagement.countDocuments({ consentToPublish: true, status: 'approved' }),
+  ])
+  res.json({ total, shared })
+}))
+
+router.get('/engagements/locations', asyncRoute(async (_req, res) => {
+  const locations = await Engagement.distinct('location')
+  res.json(locations.filter(Boolean).sort((a, b) => a.localeCompare(b, 'fr')).slice(0, 100))
+}))
+
+router.get('/engagements/wall', asyncRoute(async (req, res) => {
+  const query = { consentToPublish: true, status: 'approved' }
+  if (ENGAGEMENT_THEMES.includes(req.query.theme)) query.theme = req.query.theme
+  const [items, total, shared] = await Promise.all([
+    Engagement.find(query).select('displayName theme commitment approvedAt').sort({ approvedAt: -1, createdAt: -1 }).limit(200).lean(),
+    Engagement.countDocuments(),
+    Engagement.countDocuments({ consentToPublish: true, status: 'approved' }),
+  ])
+  res.json({ items, total, shared })
+}))
+
+router.post('/engagements', asyncRoute(async (req, res) => {
+  const body = req.body || {}
+  if (body.website) return res.status(201).json({ total: await Engagement.countDocuments() })
+  const ip = req.ip || req.socket?.remoteAddress || 'unknown'
+  const now = Date.now()
+  const recent = (engagementSubmissions.get(ip) || []).filter((time) => now - time < 10 * 60 * 1000)
+  if (recent.length >= 5) return res.status(429).json({ message: 'Trop de tentatives. Veuillez réessayer dans quelques minutes.' })
+
+  const location = String(body.location || '').trim()
+  const commitment = String(body.commitment || '').trim()
+  if (location.length < 2 || location.length > 120) return res.status(400).json({ message: 'Indiquez le lieu où nous nous sommes rencontrés.' })
+  if (!ENGAGEMENT_THEMES.includes(body.theme)) return res.status(400).json({ message: 'Choisissez une thématique.' })
+  if (commitment.length < 5 || commitment.length > 250) return res.status(400).json({ message: 'Votre engagement doit contenir entre 5 et 250 caractères.' })
+  if (body.ageRange && !ENGAGEMENT_AGE_RANGES.includes(body.ageRange)) return res.status(400).json({ message: 'La tranche d’âge sélectionnée est invalide.' })
+
+  const consentToPublish = body.consentToPublish === true
+  await Engagement.create({
+    displayName: String(body.displayName || '').trim().slice(0, 60),
+    ageRange: body.ageRange || '', location, theme: body.theme, commitment,
+    consentToPublish, status: consentToPublish ? 'pending' : 'private',
+  })
+  recent.push(now)
+  engagementSubmissions.set(ip, recent)
+  res.status(201).json({ total: await Engagement.countDocuments() })
+}))
 
 router.post('/cyberambassador/cybercomp/access', asyncRoute(async (req, res) => {
   const email = String(req.body?.email || '').trim().toLowerCase()
