@@ -13,7 +13,8 @@
     "lint": "eslint . --ext js,jsx --report-unused-disable-directives --max-warnings 0",
     "preview": "vite preview",
     "server": "node server/index.js",
-    "seed:admin": "node server/scripts/createAdmin.js"
+    "seed:admin": "node server/scripts/createAdmin.js",
+    "seed:engagements": "node server/scripts/seedEngagements.js"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",

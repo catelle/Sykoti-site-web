@@ -1,5 +1,5 @@
 import programOne from '../assets/program-1.jpg'
-import programTwo from '../assets/program-2.jpg'
+import programTwo from '../assets/ .jpg'
 import programThree from '../assets/program-3.jpg'
 import reportImage from '../assets/report.jpg'
 import webinarImage from '../assets/webinnar.png'

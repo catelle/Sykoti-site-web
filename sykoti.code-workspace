@@ -1,13 +1,10 @@
 {
 	"folders": [
 		{
-			"path": "../Sykoti.v1.0"
-		},
-		{
 			"path": "."
 		},
 		{
-			"path": "../saasFast"
+			"path": "../CyberA"
 		}
 	],
 	"settings": {}
