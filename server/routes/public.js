@@ -6,6 +6,7 @@ import Report from '../models/Report.js'
 import Support from '../models/Support.js'
 import Webinar from '../models/Webinar.js'
 import Engagement, { ENGAGEMENT_AGE_RANGES, ENGAGEMENT_THEMES } from '../models/Engagement.js'
+import ScholarshipApplication from '../models/ScholarshipApplication.js'
 
 const router = express.Router()
 const upload = multer({ dest: 'server/uploads/' })
@@ -13,6 +14,23 @@ const asyncRoute = (handler) => (req, res, next) => Promise.resolve(handler(req,
 const CYBERAMBASSADOR_APPLICATIONS_OPEN = false
 const CYBERCOMP_TRANSMISSION_INDEXES = [5, 7, 11, 15, 20]
 const engagementSubmissions = new Map()
+
+router.post('/scholarship/applications', asyncRoute(async (req, res) => {
+  const body = req.body || {}
+  const birthDate = new Date(body.dateOfBirth)
+  if (Number.isNaN(birthDate.getTime())) return res.status(400).json({ message: 'A valid date of birth is required.' })
+  const today = new Date()
+  let age = today.getUTCFullYear() - birthDate.getUTCFullYear()
+  const monthDifference = today.getUTCMonth() - birthDate.getUTCMonth()
+  if (monthDifference < 0 || (monthDifference === 0 && today.getUTCDate() < birthDate.getUTCDate())) age -= 1
+  if (age < 15 || age > 35) return res.status(400).json({ message: 'Applicants must be between 15 and 35 years old.' })
+  const declarations = body.declarations || {}
+  if (!declarations.accurate || !declarations.twoWeekCommitment || !declarations.consentToContact) return res.status(400).json({ message: 'Please accept all three declarations before submitting.' })
+  const email = String(body.email || '').trim().toLowerCase()
+  if (await ScholarshipApplication.findOne({ email, cohort: 'scholarship-2026' })) return res.status(409).json({ message: 'An application has already been submitted with this email address.' })
+  const application = await ScholarshipApplication.create({ ...body, email, age, dateOfBirth: birthDate, cohort: 'scholarship-2026', status: 'new' })
+  res.status(201).json({ id: application._id })
+}))
 
 router.get('/engagements/summary', asyncRoute(async (_req, res) => {
   const [total, shared] = await Promise.all([

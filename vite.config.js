@@ -12,6 +12,8 @@ const cleanPageRoutes = {
   '/cyberambassador/challenge/': '/cyberambassador/challenge/index.html',
   '/cyberambassador/regiistration': '/cyberambassador/regiistration/index.html',
   '/cyberambassador/regiistration/': '/cyberambassador/regiistration/index.html',
+  '/scholarship': '/scholarship/index.html',
+  '/scholarship/': '/scholarship/index.html',
 }
 
 function cleanPageRoutePlugin() {

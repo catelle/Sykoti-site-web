@@ -10,6 +10,7 @@ import Report from '../models/Report.js'
 import Support from '../models/Support.js'
 import Webinar from '../models/Webinar.js'
 import Engagement from '../models/Engagement.js'
+import ScholarshipApplication from '../models/ScholarshipApplication.js'
 import { requireAdmin } from '../middleware/auth.js'
 
 const router = express.Router()
@@ -23,6 +24,7 @@ const collections = {
   inscriptions: CyberambassadorInscription,
   supports: Support,
   engagements: Engagement,
+  scholarships: ScholarshipApplication,
 }
 
 router.get('/engagements-dashboard/stats', requireAdmin, asyncRoute(async (_req, res) => {

@@ -41,6 +41,7 @@ export function Header({ t, language, menuOpen, onToggleMenu, onSwitchLanguage, 
       </nav>
 
       <div className="navbar-actions">
+        <a className="nav-support" href="/scholarship/">{language === 'en' ? 'Scholarship' : 'Bourse'}</a>
         <button className="nav-support" type="button" onClick={() => onNavigate('support')}>
           {t.supportButton}
         </button>

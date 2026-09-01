@@ -38,6 +38,14 @@
       "destination": "/cyberambassador/registration/index.html"
     },
     {
+      "source": "/scholarship",
+      "destination": "/scholarship/index.html"
+    },
+    {
+      "source": "/scholarship/",
+      "destination": "/scholarship/index.html"
+    },
+    {
       "source": "/about",
       "destination": "/index.html"
     },
