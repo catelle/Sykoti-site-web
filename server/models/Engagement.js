@@ -23,6 +23,8 @@ const engagementSchema = new mongoose.Schema({
   location: { type: String, required: true, trim: true, maxlength: 120 },
   theme: { type: String, required: true, enum: ENGAGEMENT_THEMES },
   commitment: { type: String, required: true, trim: true, maxlength: 250 },
+  phone: { type: String, trim: true, maxlength: 40, default: '' },
+  contactConsent: { type: Boolean, default: false },
   consentToPublish: { type: Boolean, default: false },
   status: { type: String, enum: ['private', 'pending', 'approved', 'rejected'], default: 'private' },
   approvedAt: Date,

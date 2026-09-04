@@ -229,6 +229,14 @@
         margin: 0;
       }
 
+      .applicant-card .row {
+        margin-top: 14px;
+      }
+
+      .applicant-card .row button {
+        padding: 0 14px;
+      }
+
       .applicant-details {
         display: grid;
         grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -503,6 +511,7 @@
           articles: [['Publish', 'published']],
           webinars: [['Open', 'open'], ['Close', 'closed']],
           inscriptions: [['Examiner', 'reviewing'], ['Présélectionner', 'shortlisted'], ['Refuser', 'declined']],
+          scholarships: [['Passer en examen', 'reviewing'], ['Présélectionner', 'shortlisted'], ['Accepter', 'accepted'], ['Refuser', 'declined']],
           supports: [['Mark received', 'received'], ['Cancel', 'cancelled']],
           engagements: [['Approuver', 'approved'], ['Rejeter', 'rejected']],
         }[active] || []
@@ -568,12 +577,12 @@
 
         try {
           const data = await apiJson(`${API}/admin/${active}`, { headers: headers() })
-          const visibleData = active === 'inscriptions'
+          const visibleData = ['inscriptions', 'scholarships'].includes(active)
             ? data.filter((item) => applicantMatchesFilter(item, applicantFilter))
             : active === 'engagements' ? data.filter(engagementMatchesFilters)
             : data
 
-          if (active === 'inscriptions') {
+          if (['inscriptions', 'scholarships'].includes(active)) {
             loadedApplicants = data
             renderApplicantStats(data)
           } else if (active === 'engagements') {
@@ -583,7 +592,7 @@
           }
 
           items.innerHTML = visibleData.length
-            ? visibleData.map((item) => active === 'inscriptions' ? inscriptionCard(item) : active === 'engagements' ? engagementCard(item) : `
+            ? visibleData.map((item) => active === 'inscriptions' ? inscriptionCard(item) : active === 'scholarships' ? scholarshipCard(item) : active === 'engagements' ? engagementCard(item) : `
               <article>
                 <h3>${escapeHtml(item.title || item.fullName || item.name || item.email || item._id)}</h3>
                 ${item.coverUrl ? `<img class="preview" src="${escapeHtml(assetUrl(item.coverUrl))}" alt="" />` : ''}
@@ -594,7 +603,7 @@
                 </div>
               </article>
             `).join('')
-            : `<p class="muted">${active === 'inscriptions' && data.length ? 'Aucune candidature ne correspond à ce filtre.' : 'No items yet.'}</p>`
+            : `<p class="muted">${['inscriptions', 'scholarships'].includes(active) && data.length ? 'Aucune candidature ne correspond à ce filtre.' : 'No items yet.'}</p>`
         } catch (error) {
           applicantStats.hidden = true
           items.innerHTML = `<p class="status">${error.message}</p>`
@@ -624,7 +633,8 @@
       }
 
       function engagementCard(item) {
-        return `<article><h3>${escapeHtml(item.displayName || 'Citoyen·ne numérique')}</h3><p><strong>${escapeHtml(item.theme)}</strong></p><p>« Je m’engage à ${escapeHtml(item.commitment)} »</p><small>${escapeHtml(item.location)} · ${item.createdAt ? escapeHtml(new Date(item.createdAt).toLocaleString('fr-FR')) : ''}<br>Âge : ${escapeHtml(item.ageRange || 'non renseigné')} · Consentement : ${item.consentToPublish ? 'oui' : 'non'} · Statut : ${escapeHtml(item.status)}</small><div class="row">${item.consentToPublish ? actionButtons(item._id) : '<span class="muted">Engagement privé — hors publication</span>'}</div></article>`
+        const contact = item.contactConsent && item.phone ? `Contact communauté : ${item.phone}` : 'Pas de contact communautaire demandé'
+        return `<article><h3>${escapeHtml(item.displayName || 'Citoyen·ne numérique')}</h3><p><strong>${escapeHtml(item.theme)}</strong></p><p>« Je m’engage à ${escapeHtml(item.commitment)} »</p><small>${escapeHtml(item.location)} · ${item.createdAt ? escapeHtml(new Date(item.createdAt).toLocaleString('fr-FR')) : ''}<br>Âge : ${escapeHtml(item.ageRange || 'non renseigné')} · Consentement publication : ${item.consentToPublish ? 'oui' : 'non'} · ${escapeHtml(contact)} · Statut : ${escapeHtml(item.status)}</small><div class="row">${item.consentToPublish ? actionButtons(item._id) : '<span class="muted">Engagement privé — hors publication</span>'}</div></article>`
       }
 
       function normalizedApplicationStatus(item) {
@@ -716,7 +726,7 @@
           <details>
             <summary>
               <div>
-                <h3>${escapeHtml(item.fullName)}</h3>
+                <h3>${escapeHtml(item.fullName)}${item.isTestAccount ? ' <small class="cybercomp-badge">Compte test</small>' : ''}</h3>
                 <p>${escapeHtml(item.email)} · ${escapeHtml(location)}</p>
               </div>
               <div><span class="status">${escapeHtml(applicationStatusLabel(item.status))}</span><br><small>${escapeHtml(submitted)}</small></div>
@@ -740,6 +750,36 @@
             </div>
           </details>
           <div class="row">${item.cybercomp?.taken ? `<button class="cybercomp-badge" type="button" onclick="showCybercompResult('${item._id}')">✓ CyberComp effectué · ${item.cybercomp.total}/${(item.cybercomp.answers || []).length * 4 || 84}</button>` : ''}${actionButtons(item._id)}</div>
+        </article>`
+      }
+
+      function scholarshipCard(item) {
+        const submitted = item.createdAt ? new Date(item.createdAt).toLocaleString('fr-FR') : 'Date inconnue'
+        const birthDate = item.dateOfBirth ? new Date(item.dateOfBirth).toLocaleDateString('fr-FR') : '—'
+        const location = [item.city, item.country].filter(Boolean).join(', ') || 'Pays non renseigné'
+        return `<article class="applicant-card">
+          <details>
+            <summary>
+              <div><h3>${escapeHtml(item.fullName || 'Candidat·e sans nom')}</h3><p>${escapeHtml(item.email || '—')} · ${escapeHtml(location)}</p></div>
+              <div><span class="status">${escapeHtml(applicationStatusLabel(item.status))}</span><br><small>${escapeHtml(submitted)}</small></div>
+            </summary>
+            <div class="applicant-details">
+              ${applicantField('Téléphone / WhatsApp', item.phone)}
+              ${applicantField('Âge / Date de naissance', `${item.age || '—'} / ${birthDate}`)}
+              ${applicantField('Pays', item.country || 'Non renseigné')}
+              ${applicantField('Ville / localité', item.city)}
+              ${applicantField('Situation actuelle', item.currentSituation)}
+              ${applicantField('Appareil d’apprentissage', item.device)}
+              ${applicantField('Accès à Internet', item.internetAccess)}
+              ${applicantField('Obstacle d’accès', item.accessBarrier)}
+              ${applicantField('Disponibilité', item.availability, true)}
+              ${applicantField('Horaires d’apprentissage', item.preferredSchedule)}
+              ${applicantField('Date de début souhaitée', item.startAvailability)}
+              ${applicantField('Pourquoi cette bourse ?', item.need, true)}
+              ${applicantField('Déclarations', item.declarations ? `Réponses exactes : ${item.declarations.accurate ? 'oui' : 'non'} · Engagement : ${item.declarations.twoWeekCommitment ? 'oui' : 'non'} · Contact : ${item.declarations.consentToContact ? 'oui' : 'non'}` : '—', true)}
+            </div>
+          </details>
+          <div class="row">${actionButtons(item._id)}</div>
         </article>`
       }
 

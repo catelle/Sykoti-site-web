@@ -43,8 +43,13 @@ const inscriptionSchema = new mongoose.Schema(
       enum: ['new', 'reviewing', 'shortlisted', 'accepted', 'declined', 'rejected'],
       default: 'new',
     },
+    isTestAccount: { type: Boolean, default: false },
     cybercomp: {
       taken: { type: Boolean, default: false },
+      // Keep the two assessment phases independent. `taken` remains for
+      // backwards compatibility with existing records and admin screens.
+      initialTaken: { type: Boolean, default: false },
+      finalTaken: { type: Boolean, default: false },
       takenAt: Date,
       phase: { type: String, enum: ['Initiale', 'Finale'] },
       total: { type: Number, min: 21, max: 104 },

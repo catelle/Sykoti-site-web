@@ -85,7 +85,8 @@ nextButton.addEventListener('click', async () => {
     nextButton.disabled = true
     nextButton.innerHTML = '<i class="ri-loader-4-line"></i> Vérification...'
     try {
-      const response = await fetch(`${API_ROOT}/cyberambassador/cybercomp/access`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email: emailInput.value }) })
+      const phase = document.querySelector('#assessmentPhase').value
+      const response = await fetch(`${API_ROOT}/cyberambassador/cybercomp/access`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email: emailInput.value, phase }) })
       const data = await response.json().catch(() => ({}))
       if (!response.ok) throw new Error(data.message || 'Impossible de vérifier cette candidature.')
       state.profile = { name: nameInput.value.trim(), email: data.applicant.email, feedbackSubmitted: data.applicant.feedbackSubmitted, age: document.querySelector('#participantAge').value, city: document.querySelector('#participantCity').value.trim(), phase: document.querySelector('#assessmentPhase').value }

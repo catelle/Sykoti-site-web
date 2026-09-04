@@ -14,7 +14,7 @@ async function request(url, options) {
 }
 
 export function EngagementPage({ navigate }) {
-  const [form, setForm] = useState({ displayName: '', ageRange: '', location: '', theme: '', commitment: '', consentToPublish: false, website: '' })
+  const [form, setForm] = useState({ displayName: '', ageRange: '', location: '', theme: '', commitment: '', phone: '', contactConsent: false, consentToPublish: false, website: '' })
   const [locations, setLocations] = useState([]), [busy, setBusy] = useState(false), [error, setError] = useState(''), [total, setTotal] = useState(null)
   useEffect(() => { request('/engagements/locations').then(setLocations).catch(() => {}) }, [])
   const change = (key, value) => setForm((current) => ({ ...current, [key]: value }))
@@ -34,18 +34,21 @@ export function EngagementPage({ navigate }) {
     <label className="wide">Thématique de mon engagement <select required value={form.theme} onChange={(e) => change('theme', e.target.value)}><option value="">Choisir une thématique</option>{THEMES.map((theme) => <option key={theme}>{theme}</option>)}</select></label>
     <label className="wide">Je m’engage à… <textarea required minLength="5" maxLength="250" value={form.commitment} placeholder="Ex. vérifier une information avant de la partager." onChange={(e) => change('commitment', e.target.value)} /><span className="char-count">{form.commitment.length}/250</span></label>
     <div className="examples wide"><small>Quelques idées</small>{EXAMPLES.map((example) => <button type="button" key={example} onClick={() => change('commitment', example)}>+ {example}</button>)}</div>
+    <label className="wide">Téléphone / WhatsApp <small>Facultatif — pour rejoindre notre communauté</small><input type="tel" maxLength="40" autoComplete="tel" value={form.phone} placeholder="Ex. +237 6 55 00 00 00" onChange={(e) => change('phone', e.target.value)} /></label>
+    <label className="consent wide"><input type="checkbox" checked={form.contactConsent} onChange={(e) => change('contactConsent', e.target.checked)} /><span>J’accepte que Sykoti Center utilise ce numéro pour me contacter au sujet de la communauté.</span></label>
     <label className="consent wide"><input type="checkbox" checked={form.consentToPublish} onChange={(e) => change('consentToPublish', e.target.checked)} /><span>J’accepte que mon engagement soit publié sur le Mur des engagements de Sykoti Center.</span></label>
     <input className="honey" tabIndex="-1" autoComplete="off" name="website" value={form.website} onChange={(e) => change('website', e.target.value)} />
-    <p className="privacy wide">Les informations recueillies servent à mesurer l’impact du Digital Citizenship Tour. Seuls les engagements pour lesquels une autorisation de publication a été donnée pourront apparaître publiquement.</p>
+    <p className="privacy wide">Votre numéro reste privé et ne sera jamais affiché sur le Mur. Il sera conservé uniquement si vous acceptez que nous vous contactions pour rejoindre la communauté.</p>
     {error && <p className="form-error wide" role="alert">{error}</p>}<button className="button primary submit-commitment wide" disabled={busy}>{busy ? 'Enregistrement…' : 'Je prends mon engagement'} <span>↗</span></button>
   </form></section>
 }
 
-export function WallPage() {
+export function WallPage({ navigate }) {
   const [data, setData] = useState({ items: [], total: 0, shared: 0 }), [theme, setTheme] = useState(''), [loading, setLoading] = useState(true), [error, setError] = useState('')
   useEffect(() => { setLoading(true); request(`/engagements/wall${theme ? `?theme=${encodeURIComponent(theme)}` : ''}`).then(setData).catch((e) => setError(e.message)).finally(() => setLoading(false)) }, [theme])
   const items = useMemo(() => data.items || [], [data.items])
-  return <section className="wall-shell"><div className="wall-tools"><label>Filtrer par thématique <select value={theme} onChange={(e) => setTheme(e.target.value)}><option value="">Toutes les thématiques</option>{THEMES.map((item) => <option key={item}>{item}</option>)}</select></label></div>
+  return <section className="wall-shell"><div className="wall-heading"><div
+  ><button className="button primary" onClick={() => navigate('engagement')}>Prendre un engagement <span>↗</span></button><p>Découvrez les promesses concrètes prises par les citoyens de différentes ville au Cameroun</p></div></div><div className="wall-tools"><label>Filtrer par thématique <select value={theme} onChange={(e) => setTheme(e.target.value)}><option value="">Toutes les thématiques</option>{THEMES.map((item) => <option key={item}>{item}</option>)}</select></label></div>
     {loading ? <p className="wall-state">Chargement des engagements…</p> : error ? <p className="wall-state form-error">{error}</p> : items.length ? <div className="commitment-grid">{items.map((item, index) => <article key={item._id} style={{ '--delay': `${Math.min(index, 12) * 45}ms` }}><span>{item.theme}</span><blockquote>« Je m’engage à {item.commitment.replace(/^je m['’]engage à\s*/i, '')} »</blockquote><footer>— {item.displayName || 'Citoyen·ne numérique'}</footer></article>)}</div> : <p className="wall-state">Aucun engagement approuvé dans cette thématique pour le moment.</p>}
   </section>
 }

@@ -173,8 +173,8 @@ fieldset { margin: 0; padding: 0; border: 0; }
 .domain-label span { color: rgba(255,255,255,.6); font-size: 12px; text-transform: uppercase; }
 .domain-label strong { display: block; color: var(--white); font-size: 13px; text-transform: none; }
 .quiz-card { min-height: 620px; padding: clamp(25px,5vw,48px); border: 1px solid rgba(167,46,92,.12); border-radius: 28px; background: var(--white); box-shadow: 0 16px 45px rgba(74,15,40,.07); }
-.quiz-card h1 { max-width: 760px; margin-left: 0; font-size: clamp(2rem,4vw,3.25rem); }
-.quiz-card h1 + p { color: var(--muted); }
+.quiz-card h1 { max-width: 680px; margin-left: 0; font-size: clamp(1.55rem,2.6vw,2.35rem); line-height: 1.12; }
+.quiz-card h1 + p { max-width: 680px; color: var(--muted); font-size: 14px; line-height: 1.55; }
 .question-number { color: var(--rose); font-size: 13px; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; }
 .answer-list { display: grid; gap: 12px; margin-top: 28px; }
 .answer-option { display: flex; gap: 14px; align-items: flex-start; padding: 17px; border: 1px solid var(--line); border-radius: 14px; cursor: pointer; font-weight: 500; transition: border-color .2s, background .2s; }

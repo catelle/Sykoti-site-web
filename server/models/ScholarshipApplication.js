@@ -7,7 +7,8 @@ const scholarshipApplicationSchema = new mongoose.Schema(
     phone: { type: String, required: true, trim: true },
     dateOfBirth: { type: Date, required: true },
     age: { type: Number, required: true, min: 15, max: 35 },
-    country: { type: String, required: true, trim: true },
+    // Optional for backward compatibility with applications submitted before country was collected.
+    country: { type: String, trim: true, default: '' },
     city: { type: String, required: true, trim: true },
     currentSituation: { type: String, required: true, trim: true },
     need: { type: String, required: true, maxlength: 1200 },
