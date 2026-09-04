@@ -22,10 +22,11 @@ const engagementSubmissions = new Map()
 const isCybercompTestEmail = (email) => CYBERCOMP_TEST_EMAILS.has(email)
 const assessmentPhase = (value) => value === 'Finale' ? 'Finale' : 'Initiale'
 
-// Match applicants who have not yet submitted this phase. The legacy fields
-// are included so records created before the two-phase flow remain usable.
+// Match applicants who have not yet submitted this phase. Initiale keeps a
+// legacy fallback; old shared results must not block the newly introduced
+// Finale attempt.
 const phaseAvailableQuery = (phase) => phase === 'Finale'
-  ? { $nor: [{ 'cybercomp.finalTaken': true }, { 'cybercomp.taken': true, 'cybercomp.phase': 'Finale' }] }
+  ? { 'cybercomp.finalTaken': { $ne: true } }
   : { $nor: [{ 'cybercomp.initialTaken': true }, { 'cybercomp.taken': true, 'cybercomp.phase': 'Initiale' }] }
 
 async function ensureCybercompTestApplicant(email) {
@@ -143,9 +144,11 @@ router.post('/cyberambassador/cybercomp/access', asyncRoute(async (req, res) => 
     : await CyberambassadorInscription.findOne({ email, cohort: 'pilot-2026' }).select('fullName email cybercomp.taken cybercomp.initialTaken cybercomp.finalTaken cybercomp.phase cybercomp.feedback.submittedAt')
   if (!applicant) return res.status(404).json({ message: 'Cette adresse e-mail ne correspond pas à une candidature CyberAmbassador.' })
   const alreadyTaken = phase === 'Finale'
-    ? applicant.cybercomp?.finalTaken === true || (applicant.cybercomp?.taken === true && applicant.cybercomp?.phase === 'Finale')
+    ? applicant.cybercomp?.finalTaken === true
     : applicant.cybercomp?.initialTaken === true || (applicant.cybercomp?.taken === true && applicant.cybercomp?.phase === 'Initiale')
-  if (alreadyTaken) return res.status(409).json({ message: `Vous avez déjà passé l’évaluation ${phase}.` })
+  // Explicit test accounts are intentionally reusable so both phases can be
+  // exercised repeatedly during QA. Real applicants remain one-attempt-per-phase.
+  if (alreadyTaken && !isCybercompTestEmail(email)) return res.status(409).json({ message: `Vous avez déjà passé l’évaluation ${phase}.` })
 
   // Migrate the legacy single-result record before a Finale result replaces
   // its phase, so the old Initiale attempt remains protected as well.
@@ -213,8 +216,9 @@ router.post('/cyberambassador/cybercomp/results', asyncRoute(async (req, res) =>
         : 'Hautement spécialisé'
   const domains = Array.isArray(req.body?.domains) ? req.body.domains : []
   if (domains.length !== 5) return res.status(400).json({ message: 'Les résultats des cinq domaines sont requis.' })
+  const availabilityQuery = isCybercompTestEmail(email) ? {} : phaseAvailableQuery(phase)
   const applicant = await CyberambassadorInscription.findOneAndUpdate(
-    { email, cohort: 'pilot-2026', ...phaseAvailableQuery(phase) },
+    { email, cohort: 'pilot-2026', ...availabilityQuery },
     { $set: { 'cybercomp.taken': true, [`cybercomp.${phase === 'Finale' ? 'finalTaken' : 'initialTaken'}`]: true, 'cybercomp.takenAt': new Date(), 'cybercomp.phase': phase, 'cybercomp.total': total, 'cybercomp.level': expectedLevel, 'cybercomp.answers': answers, 'cybercomp.domains': domains.map((domain) => ({ name: String(domain.name || ''), score: Number(domain.score), max: Number(domain.max) })) } },
     { new: true, runValidators: true }
   ).select('fullName email cybercomp')
