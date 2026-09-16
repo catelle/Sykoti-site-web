@@ -634,8 +634,7 @@
 
       function engagementCard(item) {
         const contact = item.contactConsent && item.phone ? `Contact communauté : ${item.phone}` : 'Pas de contact communautaire demandé'
-        const commitment = String(item.commitment || '').replace(/^(?:je m['’]engage\s+[àa]\s*)+/i, '').trim()
-        return `<article><h3>${escapeHtml(item.displayName || 'Citoyen·ne numérique')}</h3><p><strong>${escapeHtml(item.theme)}</strong></p><p>« ${escapeHtml(commitment)} »</p><small>${escapeHtml(item.location)} · ${item.createdAt ? escapeHtml(new Date(item.createdAt).toLocaleString('fr-FR')) : ''}<br>Âge : ${escapeHtml(item.ageRange || 'non renseigné')} · Consentement publication : ${item.consentToPublish ? 'oui' : 'non'} · ${escapeHtml(contact)} · Statut : ${escapeHtml(item.status)}</small><div class="row">${item.consentToPublish ? actionButtons(item._id) : '<span class="muted">Engagement privé — hors publication</span>'}</div></article>`
+        return `<article><h3>${escapeHtml(item.displayName || 'Citoyen·ne numérique')}</h3><p><strong>${escapeHtml(item.theme)}</strong></p><p>« ${escapeHtml(item.commitment)} »</p><small>${escapeHtml(item.location)} · ${item.createdAt ? escapeHtml(new Date(item.createdAt).toLocaleString('fr-FR')) : ''}<br>Âge : ${escapeHtml(item.ageRange || 'non renseigné')} · Consentement publication : ${item.consentToPublish ? 'oui' : 'non'} · ${escapeHtml(contact)} · Statut : ${escapeHtml(item.status)}</small><div class="row">${item.consentToPublish ? actionButtons(item._id) : '<span class="muted">Engagement privé — hors publication</span>'}</div></article>`
       }
 
       function normalizedApplicationStatus(item) {

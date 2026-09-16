@@ -5,7 +5,6 @@ const API = location.hostname === 'localhost' && location.port !== '4001' ? 'htt
 const THEMES = ['Protection de mes données personnelles','Sécurité de mes comptes','Vérification des informations','Respect des autres en ligne','Utilisation responsable des réseaux sociaux','Intelligence artificielle responsable','Protection contre les arnaques en ligne','Sensibilisation de mon entourage','Autre']
 const AGES = ['Moins de 15 ans','15–18 ans','19–24 ans','25–34 ans','35 ans et plus','Je préfère ne pas répondre']
 const EXAMPLES = ['activer la double authentification','vérifier une information avant de la partager','mieux protéger mes données personnelles','réfléchir avant de publier','respecter la vie privée des autres','sensibiliser mon entourage']
-const cleanCommitment = (value) => String(value || '').replace(/^(?:je m['’]engage\s+[àa]\s*)+/i, '').trim()
 
 async function request(url, options) {
   const response = await fetch(`${API}${url}`, options)
@@ -50,6 +49,6 @@ export function WallPage({ navigate }) {
   const items = useMemo(() => data.items || [], [data.items])
   return <section className="wall-shell"><div className="wall-heading"><div
   ><button className="button primary" onClick={() => navigate('engagement')}>Prendre un engagement <span>↗</span></button><p>Découvrez les promesses concrètes prises par les citoyens de différentes ville au Cameroun</p></div></div><div className="wall-tools"><label>Filtrer par thématique <select value={theme} onChange={(e) => setTheme(e.target.value)}><option value="">Toutes les thématiques</option>{THEMES.map((item) => <option key={item}>{item}</option>)}</select></label></div>
-    {loading ? <p className="wall-state">Chargement des engagements…</p> : error ? <p className="wall-state form-error">{error}</p> : items.length ? <div className="commitment-grid">{items.map((item, index) => <article key={item._id} style={{ '--delay': `${Math.min(index, 12) * 45}ms` }}><span>{item.theme}</span><blockquote>« {cleanCommitment(item.commitment)} »</blockquote><footer>— {item.displayName || 'Citoyen·ne numérique'}</footer></article>)}</div> : <p className="wall-state">Aucun engagement approuvé dans cette thématique pour le moment.</p>}
+    {loading ? <p className="wall-state">Chargement des engagements…</p> : error ? <p className="wall-state form-error">{error}</p> : items.length ? <div className="commitment-grid">{items.map((item, index) => <article key={item._id} style={{ '--delay': `${Math.min(index, 12) * 45}ms` }}><span>{item.theme}</span><blockquote>« {item.commitment} »</blockquote><footer>— {item.displayName || 'Citoyen·ne numérique'}</footer></article>)}</div> : <p className="wall-state">Aucun engagement approuvé dans cette thématique pour le moment.</p>}
   </section>
 }
