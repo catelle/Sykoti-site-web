@@ -715,12 +715,31 @@
         })[status] || status || 'Nouvelle'
       }
 
+      function cybercompLevel(total) {
+        if (total == null) return '—'
+        if (total <= 36) return 'Fondation'
+        if (total <= 52) return 'Intermédiaire'
+        if (total <= 68) return 'Avancé'
+        return 'Hautement spécialisé'
+      }
+
       function inscriptionCard(item) {
         const location = [item.city, item.region, item.country].filter(Boolean).join(', ')
         const education = [applicationValueLabel(item.currentOccupation), item.school, item.fieldOfStudy, applicationValueLabel(item.highestEducation)].filter(Boolean).join(' / ')
         const access = [applicationValueLabel(item.mainDevice), `Internet : ${applicationValueLabel(item.internetAccess) || 'non précisé'}`].filter(Boolean).join(' / ')
         const company = [item.selectedCompany, item.otherCompany].filter(Boolean).join(' — ')
         const submitted = item.createdAt ? new Date(item.createdAt).toLocaleString('fr-FR') : 'Date inconnue'
+        const cybercomp = item.cybercomp || {}
+        // Prefer the phase history, then support the dual-score and legacy
+        // fields used by records created before this change.
+        const phaseResult = (phase) => (cybercomp.results || []).filter((result) => result.phase === phase).at(-1)
+        const initialResult = phaseResult('Initiale')
+        const finalResult = phaseResult('Finale')
+        const initialScore = initialResult?.total ?? cybercomp.initialTotal ?? (cybercomp.initialTaken && cybercomp.phase === 'Initiale' ? cybercomp.total : null)
+        const finalScore = finalResult?.total ?? cybercomp.finalTotal ?? (cybercomp.finalTaken || cybercomp.phase === 'Finale' ? cybercomp.total : null)
+        const initialMax = initialResult?.max || cybercomp.initialMax || (cybercomp.phase === 'Initiale' ? (cybercomp.answers || []).length * 4 : 0) || 84
+        const finalMax = finalResult?.max || cybercomp.finalMax || (cybercomp.phase === 'Finale' ? (cybercomp.answers || []).length * 4 : 0) || 84
+        const scoreSummary = `Initiale : ${initialScore == null ? '—' : `${initialScore} / ${initialMax} · ${cybercompLevel(initialScore)}`} · Finale : ${finalScore == null ? '—' : `${finalScore} / ${finalMax} · ${cybercompLevel(finalScore)}`}`
 
         return `<article class="applicant-card">
           <details>
@@ -747,6 +766,7 @@
               ${applicantField('Pourquoi cette entreprise ?', item.companyReason, true)}
               ${applicantField('Motivation face aux difficultés', item.challengeMotivation, true)}
               ${applicantField('Pourquoi sélectionner cette personne ?', item.selectionReason, true)}
+              ${applicantField('Scores CyberComp', scoreSummary)}
             </div>
           </details>
           <div class="row">${item.cybercomp?.taken ? `<button class="cybercomp-badge" type="button" onclick="showCybercompResult('${item._id}')">✓ CyberComp effectué · ${item.cybercomp.total}/${(item.cybercomp.answers || []).length * 4 || 84}</button>` : ''}${actionButtons(item._id)}</div>
@@ -757,6 +777,18 @@
         const submitted = item.createdAt ? new Date(item.createdAt).toLocaleString('fr-FR') : 'Date inconnue'
         const birthDate = item.dateOfBirth ? new Date(item.dateOfBirth).toLocaleDateString('fr-FR') : '—'
         const location = [item.city, item.country].filter(Boolean).join(', ') || 'Pays non renseigné'
+        const cybercomp = item.cybercomp || {}
+        const initialResult = (cybercomp.results || []).filter((result) => result.phase === 'Initiale').at(-1)
+        const finalResult = (cybercomp.results || []).filter((result) => result.phase === 'Finale').at(-1)
+        const initialScore = initialResult?.total ?? cybercomp.initialTotal ?? (cybercomp.initialTaken && cybercomp.phase === 'Initiale' ? cybercomp.total : null)
+        const finalScore = finalResult?.total ?? cybercomp.finalTotal ?? (cybercomp.finalTaken || cybercomp.phase === 'Finale' ? cybercomp.total : null)
+        const initialMax = initialResult?.max || cybercomp.initialMax || 84
+        const finalMax = finalResult?.max || cybercomp.finalMax || 84
+        const challengeStatus = cybercomp.initialTaken || cybercomp.finalTaken || cybercomp.taken
+          ? `Initiale : ${initialScore == null ? 'effectuée' : `${initialScore} / ${initialMax} · ${cybercompLevel(initialScore)}`} · Finale : ${finalScore == null ? 'non effectuée' : `${finalScore} / ${finalMax} · ${cybercompLevel(finalScore)}`}`
+          : 'Pas encore passé'
+        const lastChallengeDate = cybercomp.takenAt ? new Date(cybercomp.takenAt).toLocaleString('fr-FR') : '—'
+        const feedbackStatus = cybercomp.feedback?.submittedAt ? `Oui · ${new Date(cybercomp.feedback.submittedAt).toLocaleString('fr-FR')}` : 'Non'
         return `<article class="applicant-card">
           <details>
             <summary>
@@ -777,16 +809,19 @@
               ${applicantField('Date de début souhaitée', item.startAvailability)}
               ${applicantField('Pourquoi cette bourse ?', item.need, true)}
               ${applicantField('Déclarations', item.declarations ? `Réponses exactes : ${item.declarations.accurate ? 'oui' : 'non'} · Engagement : ${item.declarations.twoWeekCommitment ? 'oui' : 'non'} · Contact : ${item.declarations.consentToContact ? 'oui' : 'non'}` : '—', true)}
+              ${applicantField('Statut CyberComp', challengeStatus)}
+              ${applicantField('Dernier passage CyberComp', lastChallengeDate)}
+              ${applicantField('Feedback CyberComp', feedbackStatus)}
             </div>
           </details>
-          <div class="row">${actionButtons(item._id)}</div>
+          <div class="row">${cybercomp.taken ? `<button class="cybercomp-badge" type="button" onclick="showCybercompResult('${item._id}')">Voir le détail CyberComp · ${cybercomp.total}/${(cybercomp.answers || []).length * 4 || 84}</button>` : ''}${actionButtons(item._id)}</div>
         </article>`
       }
 
       window.showCybercompResult = (id) => {
         const item = loadedApplicants.find((applicant) => applicant._id === id)
         if (!item?.cybercomp?.taken) return
-        const result = item.cybercomp
+        const result = { ...item.cybercomp, level: cybercompLevel(item.cybercomp.total) }
         const dialog = document.querySelector('#cybercompDialog')
         const maximum = (result.answers || []).length * 4 || 84
         const answerRows = (result.answers || []).map((answer, index) => {
