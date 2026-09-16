@@ -12,7 +12,6 @@ const router = express.Router()
 const upload = multer({ dest: 'server/uploads/' })
 const asyncRoute = (handler) => (req, res, next) => Promise.resolve(handler(req, res, next)).catch(next)
 const CYBERAMBASSADOR_APPLICATIONS_OPEN = false
-const CYBERCOMP_TRANSMISSION_INDEXES = [5, 7, 11, 15, 20]
 const CYBERCOMP_TEST_EMAILS = new Set([
   'catelleningha@gmail.com',
   ...(process.env.CYBERCOMP_TEST_EMAILS || '').split(',').map((email) => email.trim().toLowerCase()).filter(Boolean),
@@ -21,6 +20,17 @@ const engagementSubmissions = new Map()
 
 const isCybercompTestEmail = (email) => CYBERCOMP_TEST_EMAILS.has(email)
 const assessmentPhase = (value) => value === 'Finale' ? 'Finale' : 'Initiale'
+const challengeFields = 'fullName email cybercomp.taken cybercomp.initialTaken cybercomp.finalTaken cybercomp.phase cybercomp.feedback.submittedAt'
+
+async function findCybercompApplicant(email) {
+  const cyberambassador = await CyberambassadorInscription.findOne({ email, cohort: 'pilot-2026' }).select(challengeFields)
+  if (cyberambassador) return { applicant: cyberambassador, model: CyberambassadorInscription, cohort: 'pilot-2026' }
+
+  const scholarship = await ScholarshipApplication.findOne({ email, cohort: 'scholarship-2026' }).select(challengeFields)
+  if (scholarship) return { applicant: scholarship, model: ScholarshipApplication, cohort: 'scholarship-2026' }
+
+  return null
+}
 
 // Match applicants who have not yet submitted this phase. Initiale keeps a
 // legacy fallback; old shared results must not block the newly introduced
@@ -139,10 +149,11 @@ router.post('/engagements', asyncRoute(async (req, res) => {
 router.post('/cyberambassador/cybercomp/access', asyncRoute(async (req, res) => {
   const email = String(req.body?.email || '').trim().toLowerCase()
   const phase = assessmentPhase(req.body?.phase)
-  const applicant = isCybercompTestEmail(email)
-    ? await ensureCybercompTestApplicant(email)
-    : await CyberambassadorInscription.findOne({ email, cohort: 'pilot-2026' }).select('fullName email cybercomp.taken cybercomp.initialTaken cybercomp.finalTaken cybercomp.phase cybercomp.feedback.submittedAt')
-  if (!applicant) return res.status(404).json({ message: 'Cette adresse e-mail ne correspond pas à une candidature CyberAmbassador.' })
+  const match = isCybercompTestEmail(email)
+    ? { applicant: await ensureCybercompTestApplicant(email), model: CyberambassadorInscription, cohort: 'pilot-2026' }
+    : await findCybercompApplicant(email)
+  if (!match) return res.status(404).json({ message: 'Cette adresse e-mail ne correspond pas à une candidature CyberAmbassador ou Scholarship.' })
+  const { applicant, model } = match
   const alreadyTaken = phase === 'Finale'
     ? applicant.cybercomp?.finalTaken === true
     : applicant.cybercomp?.initialTaken === true || (applicant.cybercomp?.taken === true && applicant.cybercomp?.phase === 'Initiale')
@@ -153,9 +164,13 @@ router.post('/cyberambassador/cybercomp/access', asyncRoute(async (req, res) => 
   // Migrate the legacy single-result record before a Finale result replaces
   // its phase, so the old Initiale attempt remains protected as well.
   if (phase === 'Finale' && applicant.cybercomp?.taken === true && applicant.cybercomp?.phase === 'Initiale') {
-    await CyberambassadorInscription.updateOne(
-      { _id: applicant._id, 'cybercomp.initialTaken': { $ne: true } },
-      { $set: { 'cybercomp.initialTaken': true } }
+    await model.updateOne(
+      { _id: applicant._id, 'cybercomp.initialTotal': { $exists: false } },
+      { $set: {
+        'cybercomp.initialTaken': true,
+        'cybercomp.initialTotal': applicant.cybercomp.total,
+        'cybercomp.initialMax': (applicant.cybercomp.answers || []).length * 4 || 84,
+      } }
     )
   }
 
@@ -163,10 +178,19 @@ router.post('/cyberambassador/cybercomp/access', asyncRoute(async (req, res) => 
 }))
 
 router.get('/cyberambassador/cybercomp/feedback', asyncRoute(async (_req, res) => {
-  const applicants = await CyberambassadorInscription.find({
-    'cybercomp.taken': true,
-    'cybercomp.feedback.comment': { $exists: true, $ne: '' },
-  }).select('fullName cybercomp.feedback').sort({ 'cybercomp.feedback.submittedAt': -1 }).limit(30).lean()
+  const [cyberambassadors, scholars] = await Promise.all([
+    CyberambassadorInscription.find({
+      'cybercomp.taken': true,
+      'cybercomp.feedback.comment': { $exists: true, $ne: '' },
+    }).select('fullName cybercomp.feedback').lean(),
+    ScholarshipApplication.find({
+      'cybercomp.taken': true,
+      'cybercomp.feedback.comment': { $exists: true, $ne: '' },
+    }).select('fullName cybercomp.feedback').lean(),
+  ])
+  const applicants = [...cyberambassadors, ...scholars]
+    .sort((a, b) => new Date(b.cybercomp.feedback.submittedAt) - new Date(a.cybercomp.feedback.submittedAt))
+    .slice(0, 30)
 
   res.json(applicants.map((applicant) => ({
     name: applicant.fullName,
@@ -182,11 +206,18 @@ router.post('/cyberambassador/cybercomp/feedback', asyncRoute(async (req, res) =
   const rating = Number(req.body?.rating)
   if (comment.length < 5 || comment.length > 700) return res.status(400).json({ message: 'Votre commentaire doit contenir entre 5 et 700 caractères.' })
   if (!Number.isInteger(rating) || rating < 1 || rating > 5) return res.status(400).json({ message: 'Choisissez une note entre 1 et 5.' })
-  const applicant = await CyberambassadorInscription.findOneAndUpdate(
+  let applicant = await CyberambassadorInscription.findOneAndUpdate(
     { email, cohort: 'pilot-2026', 'cybercomp.taken': true },
     { $set: { 'cybercomp.feedback': { comment, rating, submittedAt: new Date() } } },
     { new: true, runValidators: true }
   ).select('fullName cybercomp.feedback')
+  if (!applicant) {
+    applicant = await ScholarshipApplication.findOneAndUpdate(
+      { email, cohort: 'scholarship-2026', 'cybercomp.taken': true },
+      { $set: { 'cybercomp.feedback': { comment, rating, submittedAt: new Date() } } },
+      { new: true, runValidators: true }
+    ).select('fullName cybercomp.feedback')
+  }
   if (!applicant) return res.status(404).json({ message: 'Terminez le challenge CyberComp avant de laisser un commentaire.' })
   res.status(201).json({ feedback: applicant.cybercomp.feedback })
 }))
@@ -201,31 +232,51 @@ router.post('/cyberambassador/cybercomp/results', asyncRoute(async (req, res) =>
   }
 
   const total = answers.reduce((sum, answer) => sum + answer, 0)
-  const scoreRatio = total / (answers.length * 4)
-  const transmissionAnswers = CYBERCOMP_TRANSMISSION_INDEXES.map((index) => answers[index]).filter(Boolean)
-  const transmissionAverage = transmissionAnswers.reduce((sum, answer) => sum + answer, 0) / transmissionAnswers.length
-  const demonstratedTransmission = transmissionAnswers.filter((answer) => answer >= 3).length
-  const canTransmit = transmissionAverage >= 3 && demonstratedTransmission >= 3
-  const canLeadTransmission = transmissionAverage >= 3.6 && transmissionAnswers.every((answer) => answer >= 3)
-  const expectedLevel = scoreRatio <= .65
+  const expectedLevel = total <= 36
     ? 'Fondation'
-    : scoreRatio <= .82 || !canTransmit
+    : total <= 52
       ? 'Intermédiaire'
-      : scoreRatio <= .93 || !canLeadTransmission
+      : total <= 68
         ? 'Avancé'
         : 'Hautement spécialisé'
   const domains = Array.isArray(req.body?.domains) ? req.body.domains : []
   if (domains.length !== 5) return res.status(400).json({ message: 'Les résultats des cinq domaines sont requis.' })
   const availabilityQuery = isCybercompTestEmail(email) ? {} : phaseAvailableQuery(phase)
+  const resultFields = {
+    'cybercomp.taken': true,
+    [`cybercomp.${phase === 'Finale' ? 'finalTaken' : 'initialTaken'}`]: true,
+    [`cybercomp.${phase === 'Finale' ? 'finalTotal' : 'initialTotal'}`]: total,
+    [`cybercomp.${phase === 'Finale' ? 'finalMax' : 'initialMax'}`]: answers.length * 4,
+    'cybercomp.takenAt': new Date(),
+    'cybercomp.phase': phase,
+    'cybercomp.total': total,
+    'cybercomp.level': expectedLevel,
+    'cybercomp.answers': answers,
+    'cybercomp.domains': domains.map((domain) => ({ name: String(domain.name || ''), score: Number(domain.score), max: Number(domain.max) })),
+  }
   const applicant = await CyberambassadorInscription.findOneAndUpdate(
     { email, cohort: 'pilot-2026', ...availabilityQuery },
-    { $set: { 'cybercomp.taken': true, [`cybercomp.${phase === 'Finale' ? 'finalTaken' : 'initialTaken'}`]: true, 'cybercomp.takenAt': new Date(), 'cybercomp.phase': phase, 'cybercomp.total': total, 'cybercomp.level': expectedLevel, 'cybercomp.answers': answers, 'cybercomp.domains': domains.map((domain) => ({ name: String(domain.name || ''), score: Number(domain.score), max: Number(domain.max) })) } },
+    {
+      $set: resultFields,
+      // Keep an audit-friendly record for each phase. This also prevents a
+      // later assessment from hiding the score that was submitted earlier.
+      $push: { 'cybercomp.results': { phase, total, max: answers.length * 4, takenAt: new Date() } },
+    },
     { new: true, runValidators: true }
   ).select('fullName email cybercomp')
 
   if (!applicant) {
+    applicant = await ScholarshipApplication.findOneAndUpdate(
+      { email, cohort: 'scholarship-2026', ...availabilityQuery },
+      { $set: resultFields, $push: { 'cybercomp.results': { phase, total, max: answers.length * 4, takenAt: new Date() } } },
+      { new: true, runValidators: true }
+    ).select('fullName email cybercomp')
+  }
+
+  if (!applicant) {
     const exists = await CyberambassadorInscription.exists({ email, cohort: 'pilot-2026' })
-    return res.status(exists ? 409 : 404).json({ message: exists ? `Vous avez déjà passé l’évaluation ${phase}.` : 'Cette adresse e-mail ne correspond pas à une candidature CyberAmbassador.' })
+      || await ScholarshipApplication.exists({ email, cohort: 'scholarship-2026' })
+    return res.status(exists ? 409 : 404).json({ message: exists ? `Vous avez déjà passé l’évaluation ${phase}.` : 'Cette adresse e-mail ne correspond pas à une candidature CyberAmbassador ou Scholarship.' })
   }
   res.json({ applicant })
 }))
