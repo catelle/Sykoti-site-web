@@ -20,7 +20,13 @@ const engagementSubmissions = new Map()
 
 const isCybercompTestEmail = (email) => CYBERCOMP_TEST_EMAILS.has(email)
 const assessmentPhase = (value) => value === 'Finale' ? 'Finale' : 'Initiale'
-const normalizeCommitment = (value) => String(value || '').replace(/^je m['’]engage\s+[àa]\s*/i, '').trim()
+const normalizeCommitment = (value) => {
+  let commitment = String(value || '').trim()
+  while (/^je m['’]engage\s+[àa]\s*/i.test(commitment)) {
+    commitment = commitment.replace(/^je m['’]engage\s+[àa]\s*/i, '').trim()
+  }
+  return commitment
+}
 const challengeFields = 'fullName email cybercomp.taken cybercomp.initialTaken cybercomp.finalTaken cybercomp.phase cybercomp.feedback.submittedAt'
 
 async function findCybercompApplicant(email) {
