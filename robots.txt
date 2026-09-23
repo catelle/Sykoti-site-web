@@ -1,0 +1,6 @@
+User-agent: *
+Allow: /
+Disallow: /admin.html
+Disallow: /api/
+
+Sitemap: https://catelle.github.io/Sykoti-site-web/sitemap.xml

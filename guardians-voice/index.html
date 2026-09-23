@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Guardians Voice Challenge — Application Form | Sykoti Center</title>
+  <meta name="description" content="Apply to join Sykoti Center's 30-day Guardians Voice digital awareness challenge." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/guardians-voice/styles.css" />
+</head>
+<body>
+  <header class="site-header">
+    <a class="brand" href="/" aria-label="Sykoti Center home"><img src="/img/logo.png" alt="" /><span>Sykoti <strong>Center</strong></span></a>
+    <a class="back-link" href="/">Back to website <span aria-hidden="true">↗</span></a>
+  </header>
+
+  <main id="applicationContent">
+    <section class="intro">
+      <span class="eyebrow">30-day digital awareness campaign</span>
+      <h1>Guardians Voice Challenge <em>— Application Form</em></h1>
+      <p>Your voice can make the digital space safer. Join the Guardians Voice Challenge, get trained, create impactful content, and spend 30 days raising awareness about online safety and responsible digital citizenship.</p>
+      <div class="intro-facts" aria-label="Challenge highlights"><span><strong>30 days</strong>of consistent action</span><span><strong>Training</strong>and campaign resources</span><span><strong>Your voice</strong>for safer digital spaces</span></div>
+    </section>
+
+    <div id="formAlert" class="form-alert" role="alert" tabindex="-1"></div>
+    <form id="guardianVoiceForm" class="application-form" novalidate>
+      <div class="honeypot" aria-hidden="true"><label for="website">Website</label><input id="website" name="website" tabindex="-1" autocomplete="off" /></div>
+
+      <section class="form-section" aria-labelledby="aboutHeading">
+        <div class="section-heading"><span>01</span><div><h2 id="aboutHeading">About you</h2><p>Tell us how to reach you.</p></div></div>
+        <div class="field-grid">
+          <div class="field"><label for="fullName">Full name <b>*</b></label><input id="fullName" name="fullName" required maxlength="120" autocomplete="name" /></div>
+          <div class="field"><label for="email">Email address <b>*</b></label><input id="email" name="email" type="email" required maxlength="180" autocomplete="email" /></div>
+          <div class="field"><label for="whatsapp">WhatsApp number with country code <b>*</b></label><input id="whatsapp" name="whatsapp" type="tel" required maxlength="40" pattern="\+[0-9 ()-]{7,39}" placeholder="+237 6XX XXX XXX" autocomplete="tel" /><small>Begin with + and your country code.</small></div>
+          <div class="field"><label for="age">Age <b>*</b></label><input id="age" name="age" type="number" required min="1" max="120" inputmode="numeric" /></div>
+          <div class="field"><label for="gender">Gender <small>(optional)</small></label><input id="gender" name="gender" maxlength="60" autocomplete="sex" /></div>
+          <div class="field"><label for="country">Country <b>*</b></label><input id="country" name="country" required maxlength="100" autocomplete="country-name" /></div>
+          <div class="field"><label for="city">City <b>*</b></label><input id="city" name="city" required maxlength="100" autocomplete="address-level2" /></div>
+          <div class="field"><label for="occupation">Current occupation/status <b>*</b></label><select id="occupation" name="occupation" required><option value="">Select one</option><option>Student</option><option>Professional</option><option>Entrepreneur</option><option>Content Creator</option><option>Other</option></select></div>
+          <div class="field full conditional" id="otherOccupationField" hidden><label for="otherOccupation">Please specify <b>*</b></label><input id="otherOccupation" name="otherOccupation" maxlength="100" /></div>
+        </div>
+      </section>
+
+      <section class="form-section" aria-labelledby="presenceHeading">
+        <div class="section-heading"><span>02</span><div><h2 id="presenceHeading">Your digital presence</h2><p>A quick picture of how you currently use digital platforms.</p></div></div>
+        <fieldset class="field full"><legend>Which platforms do you currently use?</legend><div class="choice-grid platform-grid">
+          <label class="choice"><input type="checkbox" name="platforms" value="TikTok" />TikTok</label><label class="choice"><input type="checkbox" name="platforms" value="Facebook" />Facebook</label><label class="choice"><input type="checkbox" name="platforms" value="Instagram" />Instagram</label><label class="choice"><input type="checkbox" name="platforms" value="LinkedIn" />LinkedIn</label><label class="choice"><input type="checkbox" name="platforms" value="YouTube" />YouTube</label><label class="choice"><input type="checkbox" name="platforms" value="X" />X</label><label class="choice"><input type="checkbox" name="platforms" value="Other" />Other</label>
+        </div></fieldset>
+        <div class="field-grid spaced">
+          <div class="field full"><label for="socialProfiles">Social media profile links <small>(optional)</small></label><textarea id="socialProfiles" name="socialProfiles" rows="3" placeholder="https://instagram.com/yourprofile&#10;https://tiktok.com/@yourprofile"></textarea><small>One complete link per line.</small></div>
+          <fieldset class="field full"><legend>Have you ever created videos or digital content? <b>*</b></legend><div class="choice-grid compact"><label class="choice"><input type="radio" name="hasCreatedContent" value="yes" required />Yes</label><label class="choice"><input type="radio" name="hasCreatedContent" value="no" required />No</label></div></fieldset>
+          <div class="field full"><label for="contentExample">If yes, share one example or link <small>(optional)</small></label><input id="contentExample" name="contentExample" type="url" maxlength="500" placeholder="https://" /></div>
+        </div>
+      </section>
+
+      <section class="form-section" aria-labelledby="whyHeading">
+        <div class="section-heading"><span>03</span><div><h2 id="whyHeading">Why Guardians Voice?</h2><p>Help us understand what you care about.</p></div></div>
+        <div class="field-grid">
+          <div class="field full"><label for="motivation">Why do you want to become a <strong>Guardians Voice Challenger</strong>? <b>*</b></label><textarea id="motivation" name="motivation" required rows="6" data-max-words="150"></textarea><small class="word-count" data-count-for="motivation">0 / 150 words</small></div>
+          <div class="field full"><label for="digitalIssue">Which digital issue would you most like to raise awareness about? <b>*</b></label><select id="digitalIssue" name="digitalIssue" required><option value="">Select one</option><option>Online safety</option><option>Cyberbullying</option><option>Scams &amp; fraud</option><option>Privacy &amp; personal data</option><option>Misinformation</option><option>Responsible social media use</option><option>AI &amp; emerging technologies</option><option>Other</option></select></div>
+          <div class="field full conditional" id="otherDigitalIssueField" hidden><label for="otherDigitalIssue">Please specify the issue <b>*</b></label><input id="otherDigitalIssue" name="otherDigitalIssue" maxlength="120" /></div>
+        </div>
+      </section>
+
+      <section class="form-section" aria-labelledby="commitmentHeading">
+        <div class="section-heading"><span>04</span><div><h2 id="commitmentHeading">Your commitment</h2><p>Be honest about what you can sustain for 30 days.</p></div></div>
+        <div class="commitment-note"><strong>30 days. One shared mission.</strong><p>The Guardians Voice Challenge runs for 30 days. Participants will receive training and campaign resources and will be expected to regularly create and publish awareness content, including short videos, throughout the campaign.</p></div>
+        <div class="field-grid spaced">
+          <fieldset class="field full"><legend>Are you willing to participate in the initial training? <b>*</b></legend><div class="choice-grid compact"><label class="choice"><input type="radio" name="trainingCommitment" value="yes" required />Yes</label><label class="choice"><input type="radio" name="trainingCommitment" value="no" required />No</label></div></fieldset>
+          <fieldset class="field full"><legend>Are you willing to create and publish content throughout the 30-day challenge? <b>*</b></legend><div class="choice-grid compact"><label class="choice"><input type="radio" name="publishingCommitment" value="yes" required />Yes</label><label class="choice"><input type="radio" name="publishingCommitment" value="no" required />No</label></div></fieldset>
+          <fieldset class="field full"><legend>Do you have access to a smartphone and internet connection for content creation? <b>*</b></legend><div class="choice-grid compact"><label class="choice"><input type="radio" name="hasEquipmentAccess" value="yes" required />Yes</label><label class="choice"><input type="radio" name="hasEquipmentAccess" value="no" required />No</label></div></fieldset>
+          <div class="field full"><label for="dailyTime">How much time can you realistically dedicate to the challenge each day? <b>*</b></label><select id="dailyTime" name="dailyTime" required><option value="">Select one</option><option>Less than 30 minutes</option><option>30–60 minutes</option><option>1–2 hours</option><option>More than 2 hours</option></select></div>
+        </div>
+      </section>
+
+      <section class="form-section final-question" aria-labelledby="challengeHeading">
+        <div class="section-heading"><span>05</span><div><h2 id="challengeHeading">Final challenge question</h2><p>Give us a glimpse of your voice.</p></div></div>
+        <div class="field full"><label for="challengeAnswer">Imagine you have <strong>30 seconds</strong> to convince another young person to take their online safety seriously. What would you tell them? <b>*</b></label><textarea id="challengeAnswer" name="challengeAnswer" required rows="6" data-max-words="100"></textarea><small class="word-count" data-count-for="challengeAnswer">0 / 100 words</small></div>
+      </section>
+
+      <section class="confirmation" aria-labelledby="confirmationHeading">
+        <span class="confirmation-number">06</span><h2 id="confirmationHeading">Confirmation</h2>
+        <label class="confirm-choice"><input type="checkbox" name="selectionAndParticipation" required /><span>I understand that applying does not automatically guarantee selection and that selected Challengers are expected to actively participate throughout the campaign.</span></label>
+        <label class="confirm-choice"><input type="checkbox" name="rewardsCriteria" required /><span>I understand that <strong>special rewards are available to participants who successfully complete the Guardians Voice Challenge</strong>, according to the challenge completion criteria.</span></label>
+        <button id="submitButton" type="submit">APPLY TO BECOME A GUARDIAN VOICE <span aria-hidden="true">→</span></button>
+        <p class="submit-note">Fields marked * are required. Your application is securely sent to Sykoti Center.</p>
+      </section>
+    </form>
+  </main>
+
+  <footer><strong>Sykoti Center</strong><span>Safer digital lives for African communities.</span></footer>
+  <script src="/guardians-voice/application.js"></script>
+</body>
+</html>
