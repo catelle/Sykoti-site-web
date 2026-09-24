@@ -110,7 +110,7 @@ form.addEventListener('submit', async (event) => {
     const result = await response.json().catch(() => ({}))
     if (!response.ok) throw new Error(result.message || 'Your application could not be submitted. Please try again.')
 
-    document.querySelector('#applicationContent').innerHTML = `<section class="success-card" role="status"><span class="success-icon" aria-hidden="true">✓</span><span class="eyebrow">Application received</span><h1>Thank you for stepping forward.</h1><p>Application received! Thank you for stepping forward to use your voice for a safer digital space. The Sykoti Center team will contact selected Challengers with the next steps.</p><a href="/">Return to Sykoti Center</a></section>`
+    document.querySelector('#applicationContent').innerHTML = `<section class="success-card" role="status"><span class="success-icon" aria-hidden="true">✓</span><span class="eyebrow">Application received</span><h1>Thank you for stepping forward.</h1><p>Application received! Thank you for stepping forward to use your voice for a safer digital space. The Sykoti Center team will contact selected Challengers with the next steps.</p><a href="../">Return to Sykoti Center</a></section>`
     window.scrollTo({ top: 0, behavior: 'smooth' })
   } catch (error) {
     showError(error instanceof TypeError ? 'The application service is unavailable right now. Please check your connection and try again.' : error.message)
