@@ -14,6 +14,8 @@ const cleanPageRoutes = {
   '/cyberambassador/regiistration/': '/cyberambassador/regiistration/index.html',
   '/scholarship': '/scholarship/index.html',
   '/scholarship/': '/scholarship/index.html',
+  '/guardians-voice': '/guardians-voice/index.html',
+  '/guardians-voice/': '/guardians-voice/index.html',
 }
 
 function cleanPageRoutePlugin() {
@@ -29,7 +31,7 @@ function cleanPageRoutePlugin() {
     } else if (
       basePrefix
       && !pathname.startsWith(basePrefix)
-      && (pathname.startsWith('/cyberambassador/') || pathname.startsWith('/img/'))
+      && (pathname.startsWith('/cyberambassador/') || pathname.startsWith('/guardians-voice/') || pathname.startsWith('/img/'))
     ) {
       req.url = `${basePrefix}${pathname}${query ? `?${query}` : ''}`
     }

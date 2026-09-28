@@ -1,5 +1,12 @@
 import mongoose from 'mongoose'
 
+const assessmentResultSchema = new mongoose.Schema({
+  phase: { type: String, enum: ['Initiale', 'Finale'], required: true },
+  total: { type: Number, min: 21, max: 104, required: true },
+  max: { type: Number, min: 84, max: 104, required: true },
+  takenAt: { type: Date, default: Date.now },
+}, { _id: false })
+
 const inscriptionSchema = new mongoose.Schema(
   {
     fullName: { type: String, required: true, trim: true },
@@ -50,6 +57,13 @@ const inscriptionSchema = new mongoose.Schema(
       // backwards compatibility with existing records and admin screens.
       initialTaken: { type: Boolean, default: false },
       finalTaken: { type: Boolean, default: false },
+      // Keep a score for each assessment phase. `total` below remains the
+      // latest result for backwards compatibility with existing consumers.
+      initialTotal: { type: Number, min: 21, max: 104 },
+      finalTotal: { type: Number, min: 21, max: 104 },
+      initialMax: { type: Number, min: 84, max: 104 },
+      finalMax: { type: Number, min: 84, max: 104 },
+      results: [assessmentResultSchema],
       takenAt: Date,
       phase: { type: String, enum: ['Initiale', 'Finale'] },
       total: { type: Number, min: 21, max: 104 },

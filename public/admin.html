@@ -366,6 +366,7 @@
         supports: [],
         engagements: [],
         scholarships: [],
+        'guardians-voice-applications': [],
       }
 
       // Mirrors public/cyberambassador/challenge/challenge.js `questions` so admin can show each selected answer's full text.
@@ -396,6 +397,7 @@
       let token = localStorage.getItem('sykotiAdminToken') || ''
       let active = 'reports'
       let applicantFilter = 'all'
+      let applicantSearch = ''
       let loadedApplicants = []
       let engagementFilters = { search: '', location: '', theme: '', date: '' }
 
@@ -416,10 +418,12 @@
       Object.keys(resources).forEach((resource) => {
         const button = document.createElement('button')
         button.type = 'button'
-        button.textContent = resource
+        button.textContent = resource === 'guardians-voice-applications' ? 'Guardians Voice applications' : resource
+        button.dataset.resource = resource
         button.onclick = () => {
           active = resource
           applicantFilter = 'all'
+          applicantSearch = ''
           render()
         }
         nav.appendChild(button)
@@ -512,6 +516,7 @@
           webinars: [['Open', 'open'], ['Close', 'closed']],
           inscriptions: [['Examiner', 'reviewing'], ['Présélectionner', 'shortlisted'], ['Refuser', 'declined']],
           scholarships: [['Passer en examen', 'reviewing'], ['Présélectionner', 'shortlisted'], ['Accepter', 'accepted'], ['Refuser', 'declined']],
+          'guardians-voice-applications': [['Passer en examen', 'reviewing'], ['Présélectionner', 'shortlisted'], ['Accepter', 'accepted'], ['Refuser', 'declined']],
           supports: [['Mark received', 'received'], ['Cancel', 'cancelled']],
           engagements: [['Approuver', 'approved'], ['Rejeter', 'rejected']],
         }[active] || []
@@ -523,21 +528,23 @@
       }
 
       async function render() {
-        title.textContent = active[0].toUpperCase() + active.slice(1)
-        nav.querySelectorAll('button').forEach((button) => button.classList.toggle('active', button.textContent === active))
+        title.textContent = active === 'guardians-voice-applications' ? 'Guardians Voice applications' : active[0].toUpperCase() + active.slice(1)
+        nav.querySelectorAll('button').forEach((button) => button.classList.toggle('active', button.dataset.resource === active))
         resourceStatus.className = 'status'
 
         const fields = resources[active]
         createForm.className = active === 'articles' ? 'article-form' : ''
         createForm.innerHTML = active === 'engagements'
           ? `<p>Les engagements publiables doivent être approuvés avant d’apparaître sur le mur.</p><div class="engagement-filters"><input id="engagementSearch" placeholder="Rechercher un nom ou un texte" value="${escapeHtml(engagementFilters.search)}"><select id="engagementLocation"><option value="">Tous les lieux</option></select><select id="engagementTheme"><option value="">Toutes les thématiques</option></select><input id="engagementDate" type="date" value="${escapeHtml(engagementFilters.date)}"></div>`
+          : ['scholarships', 'guardians-voice-applications'].includes(active)
+          ? `<label class="applicant-search">Rechercher un candidat par nom<input id="applicantSearch" type="search" placeholder="Nom complet" value="${escapeHtml(applicantSearch)}" autocomplete="off"></label>`
           : fields.length
           ? `<div class="grid">${fields.map((field) => `<label>${field}${fieldInput(field)}</label>`).join('')}</div><button class="primary" type="submit">Create ${active}</button>`
           : '<p>This resource is collected from public forms. Use item actions below to update status.</p>'
 
         createForm.onsubmit = async (event) => {
           event.preventDefault()
-          if (active === 'engagements') return
+          if (active === 'engagements' || ['inscriptions', 'scholarships', 'guardians-voice-applications'].includes(active)) return
           const form = event.currentTarget
           resourceStatus.textContent = `Creating ${active}...`
           const submitButton = form.querySelector('button[type="submit"]')
@@ -569,6 +576,13 @@
           }
         }
 
+        if (['scholarships', 'guardians-voice-applications'].includes(active)) {
+          document.querySelector('#applicantSearch').oninput = (event) => {
+            applicantSearch = event.target.value
+            renderApplicantItems(loadedApplicants)
+          }
+        }
+
         if (!token) {
           applicantStats.hidden = true
           items.innerHTML = '<p class="status">Login required.</p>'
@@ -577,12 +591,12 @@
 
         try {
           const data = await apiJson(`${API}/admin/${active}`, { headers: headers() })
-          const visibleData = ['inscriptions', 'scholarships'].includes(active)
+          const visibleData = ['inscriptions', 'scholarships', 'guardians-voice-applications'].includes(active)
             ? data.filter((item) => applicantMatchesFilter(item, applicantFilter))
             : active === 'engagements' ? data.filter(engagementMatchesFilters)
             : data
 
-          if (['inscriptions', 'scholarships'].includes(active)) {
+          if (['inscriptions', 'scholarships', 'guardians-voice-applications'].includes(active)) {
             loadedApplicants = data
             renderApplicantStats(data)
           } else if (active === 'engagements') {
@@ -591,8 +605,11 @@
             applicantStats.hidden = true
           }
 
-          items.innerHTML = visibleData.length
-            ? visibleData.map((item) => active === 'inscriptions' ? inscriptionCard(item) : active === 'scholarships' ? scholarshipCard(item) : active === 'engagements' ? engagementCard(item) : `
+          if (['inscriptions', 'scholarships', 'guardians-voice-applications'].includes(active)) {
+            renderApplicantItems(data)
+          } else {
+            items.innerHTML = visibleData.length
+            ? visibleData.map((item) => active === 'engagements' ? engagementCard(item) : `
               <article>
                 <h3>${escapeHtml(item.title || item.fullName || item.name || item.email || item._id)}</h3>
                 ${item.coverUrl ? `<img class="preview" src="${escapeHtml(assetUrl(item.coverUrl))}" alt="" />` : ''}
@@ -603,7 +620,8 @@
                 </div>
               </article>
             `).join('')
-            : `<p class="muted">${['inscriptions', 'scholarships'].includes(active) && data.length ? 'Aucune candidature ne correspond à ce filtre.' : 'No items yet.'}</p>`
+            : `<p class="muted">${['inscriptions', 'scholarships', 'guardians-voice-applications'].includes(active) && data.length ? 'Aucune candidature ne correspond à ce filtre.' : 'No items yet.'}</p>`
+          }
         } catch (error) {
           applicantStats.hidden = true
           items.innerHTML = `<p class="status">${error.message}</p>`
@@ -644,8 +662,25 @@
       function applicantMatchesFilter(item, filter) {
         const status = normalizedApplicationStatus(item)
         if (filter === 'all') return true
+        if (filter === 'cybercomp-completed') { const cybercomp = item.cybercomp || {}; return Boolean(cybercomp.taken || cybercomp.initialTaken || cybercomp.finalTaken || cybercomp.takenAt || cybercomp.phase || cybercomp.total != null || cybercomp.answers?.length || cybercomp.results?.length) }
         if (filter === 'declined') return status === 'declined' || status === 'rejected'
         return status === filter
+      }
+
+      function normalizeApplicantSearch(value) {
+        return String(value ?? '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim()
+      }
+
+      function applicantMatchesSearch(item) {
+        const query = normalizeApplicantSearch(applicantSearch)
+        return !query || normalizeApplicantSearch(item.fullName).includes(query)
+      }
+
+      function renderApplicantItems(data) {
+        const visibleData = data.filter((item) => applicantMatchesFilter(item, applicantFilter) && applicantMatchesSearch(item))
+        items.innerHTML = visibleData.length
+          ? visibleData.map((item) => active === 'inscriptions' ? inscriptionCard(item) : active === 'scholarships' ? scholarshipCard(item) : guardianVoiceCard(item)).join('')
+          : `<p class="muted">${data.length ? 'Aucune candidature ne correspond à ce filtre ou à cette recherche.' : 'No items yet.'}</p>`
       }
 
       function renderApplicantStats(data) {
@@ -657,6 +692,7 @@
           ['accepted', 'Acceptées'],
           ['declined', 'Refusées'],
         ]
+        if (active === "scholarships") filters.push(["cybercomp-completed", "CyberComp effectué"])
 
         applicantStats.hidden = false
         applicantStats.innerHTML = filters.map(([filter, label]) => {
@@ -741,7 +777,7 @@
         const finalMax = finalResult?.max || cybercomp.finalMax || (cybercomp.phase === 'Finale' ? (cybercomp.answers || []).length * 4 : 0) || 84
         const scoreSummary = `Initiale : ${initialScore == null ? '—' : `${initialScore} / ${initialMax} · ${cybercompLevel(initialScore)}`} · Finale : ${finalScore == null ? '—' : `${finalScore} / ${finalMax} · ${cybercompLevel(finalScore)}`}`
 
-        return `<article class="applicant-card">
+        return `<article class="applicant-card" data-applicant-name="${escapeHtml(item.fullName || '')}">
           <details>
             <summary>
               <div>
@@ -789,7 +825,7 @@
           : 'Pas encore passé'
         const lastChallengeDate = cybercomp.takenAt ? new Date(cybercomp.takenAt).toLocaleString('fr-FR') : '—'
         const feedbackStatus = cybercomp.feedback?.submittedAt ? `Oui · ${new Date(cybercomp.feedback.submittedAt).toLocaleString('fr-FR')}` : 'Non'
-        return `<article class="applicant-card">
+        return `<article class="applicant-card" data-applicant-name="${escapeHtml(item.fullName || '')}">
           <details>
             <summary>
               <div><h3>${escapeHtml(item.fullName || 'Candidat·e sans nom')}</h3><p>${escapeHtml(item.email || '—')} · ${escapeHtml(location)}</p></div>
@@ -815,6 +851,25 @@
             </div>
           </details>
           <div class="row">${cybercomp.taken ? `<button class="cybercomp-badge" type="button" onclick="showCybercompResult('${item._id}')">Voir le détail CyberComp · ${cybercomp.total}/${(cybercomp.answers || []).length * 4 || 84}</button>` : ''}${actionButtons(item._id)}</div>
+        </article>`
+      }
+
+      function guardianVoiceCard(item) {
+        const submitted = item.createdAt ? new Date(item.createdAt).toLocaleString('fr-FR') : 'Date inconnue'
+        const location = [item.city, item.country].filter(Boolean).join(', ')
+        const occupation = [item.occupation, item.otherOccupation].filter(Boolean).join(' — ')
+        return `<article class="applicant-card" data-applicant-name="${escapeHtml(item.fullName || '')}">
+          <details>
+            <summary><div><h3>${escapeHtml(item.fullName || 'Candidat·e sans nom')}</h3><p>${escapeHtml(item.email || '—')} · ${escapeHtml(location)}</p></div><div><span class="status">${escapeHtml(applicationStatusLabel(item.status))}</span><br><small>${escapeHtml(submitted)}</small></div></summary>
+            <div class="applicant-details">
+              ${applicantField('WhatsApp', item.whatsapp)}${applicantField('Âge / Genre', `${item.age || '—'} / ${item.gender || '—'}`)}${applicantField('Occupation', occupation)}
+              ${applicantField('Plateformes', (item.platforms || []).join(', '))}${applicantField('Profils sociaux', (item.socialProfiles || []).join(', '), true)}
+              ${applicantField('A déjà créé du contenu', item.hasCreatedContent ? 'Oui' : 'Non')}${applicantField('Exemple de contenu', item.contentExample, true)}
+              ${applicantField('Enjeu numérique', [item.digitalIssue, item.otherDigitalIssue].filter(Boolean).join(' — '))}${applicantField('Temps quotidien disponible', item.dailyTime)}
+              ${applicantField('Accès à l’équipement', item.hasEquipmentAccess ? 'Oui' : 'Non')}${applicantField('Motivation', item.motivation, true)}${applicantField('Réponse 30 secondes', item.challengeAnswer, true)}
+              ${applicantField('Engagement', `${item.trainingCommitment ? 'Formation : oui' : 'Formation : non'} · ${item.publishingCommitment ? 'Publication : oui' : 'Publication : non'}`)}
+            </div>
+          </details><div class="row">${actionButtons(item._id)}</div>
         </article>`
       }
 

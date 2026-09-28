@@ -40,8 +40,6 @@ const questions = [
   [4, '5.4', 'Votre équipe adopte un nouvel outil. Comment assurez-vous son appropriation ?', ['Je choisis l’outil et montre rapidement où cliquer.', 'Je fais une démonstration et reste disponible pour les questions.', 'Je diagnostique les niveaux, explique avec des exemples, fais pratiquer chacun et vérifie l’autonomie avant de partir.', 'J’ai déjà conçu et animé une formation inclusive, fourni des supports réutilisables et mesuré l’adoption pour ajuster l’accompagnement.']],
 ]
 
-const transmissionQuestionIndexes = [5, 7, 11, 15, 20]
-
 const state = { step: -1, answers: Array(questions.length).fill(null), profile: {}, result: null }
 const gateView = document.querySelector('#gateView')
 const quizView = document.querySelector('#quizView')
@@ -120,16 +118,11 @@ previousButton.addEventListener('click', () => {
 })
 
 function resultForAnswers(answers) {
-  const ratio = answers.reduce((sum, value) => sum + value, 0) / (answers.length * 4)
-  const transmissionAnswers = transmissionQuestionIndexes.map(index => answers[index])
-  const transmissionAverage = transmissionAnswers.reduce((sum, value) => sum + value, 0) / transmissionAnswers.length
-  const demonstratedTransmission = transmissionAnswers.filter(value => value >= 3).length
-  const canTransmit = transmissionAverage >= 3 && demonstratedTransmission >= 3
-  const canLeadTransmission = transmissionAverage >= 3.6 && transmissionAnswers.every(value => value >= 3)
+  const total = answers.reduce((sum, value) => sum + value, 0)
 
-  if (ratio <= .65) return { level: 'Fondation', text: 'Vous posez les bases de votre autonomie numérique.', guidance: 'Entraînez-vous sur des situations concrètes : vérifier une source, sécuriser vos comptes, organiser vos données et expliquer un geste simple à une autre personne.' }
-  if (ratio <= .82 || !canTransmit) return { level: 'Intermédiaire', text: canTransmit ? 'Vous êtes autonome dans plusieurs usages et consolidez encore vos pratiques.' : 'Vous possédez des connaissances numériques, mais devez encore développer votre capacité à les transmettre.', guidance: canTransmit ? 'Rendez vos pratiques plus régulières, documentées et reproductibles.' : 'Exercez-vous à expliquer simplement, faire pratiquer sans faire à la place de l’autre et vérifier son autonomie.' }
-  if (ratio <= .93 || !canLeadTransmission) return { level: 'Avancé', text: 'Vous combinez autonomie numérique et capacité à accompagner les autres.', guidance: 'Structurez vos supports, mesurez les acquis de vos publics et approfondissez les domaines où votre score reste plus faible.' }
+  if (total <= 36) return { level: 'Fondation', text: 'Vous posez les bases de votre autonomie numérique.', guidance: 'Entraînez-vous sur des situations concrètes : vérifier une source, sécuriser vos comptes, organiser vos données et expliquer un geste simple à une autre personne.' }
+  if (total <= 52) return { level: 'Intermédiaire', text: 'Vous êtes autonome dans plusieurs usages et consolidez encore vos pratiques.', guidance: 'Rendez vos pratiques plus régulières, documentées et reproductibles.' }
+  if (total <= 68) return { level: 'Avancé', text: 'Vous combinez autonomie numérique et capacité à accompagner les autres.', guidance: 'Structurez vos supports, mesurez les acquis de vos publics et approfondissez les domaines où votre score reste plus faible.' }
   return { level: 'Hautement spécialisé', text: 'Vous maîtrisez des pratiques exigeantes et savez organiser leur transmission.', guidance: 'Mettez cette expertise au service de la communauté par le mentorat, la formation et l’évaluation de l’impact.' }
 }
 

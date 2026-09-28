@@ -7,6 +7,7 @@ import Support from '../models/Support.js'
 import Webinar from '../models/Webinar.js'
 import Engagement, { ENGAGEMENT_AGE_RANGES, ENGAGEMENT_THEMES } from '../models/Engagement.js'
 import ScholarshipApplication from '../models/ScholarshipApplication.js'
+import GuardianVoiceApplication from '../models/GuardianVoiceApplication.js'
 
 const router = express.Router()
 const upload = multer({ dest: 'server/uploads/' })
@@ -17,6 +18,23 @@ const CYBERCOMP_TEST_EMAILS = new Set([
   ...(process.env.CYBERCOMP_TEST_EMAILS || '').split(',').map((email) => email.trim().toLowerCase()).filter(Boolean),
 ])
 const engagementSubmissions = new Map()
+const guardianVoiceSubmissions = new Map()
+
+const GUARDIAN_VOICE_PLATFORMS = ['TikTok', 'Facebook', 'Instagram', 'LinkedIn', 'YouTube', 'X', 'Other']
+const GUARDIAN_VOICE_OCCUPATIONS = ['Student', 'Professional', 'Entrepreneur', 'Content Creator', 'Other']
+const GUARDIAN_VOICE_ISSUES = ['Online safety', 'Cyberbullying', 'Scams & fraud', 'Privacy & personal data', 'Misinformation', 'Responsible social media use', 'AI & emerging technologies', 'Other']
+const GUARDIAN_VOICE_DAILY_TIME = ['Less than 30 minutes', '30–60 minutes', '1–2 hours', 'More than 2 hours']
+
+const text = (value) => String(value || '').trim()
+const wordCount = (value) => text(value).split(/\s+/).filter(Boolean).length
+const isWebUrl = (value) => {
+  try {
+    const url = new URL(value)
+    return ['http:', 'https:'].includes(url.protocol)
+  } catch {
+    return false
+  }
+}
 
 const isCybercompTestEmail = (email) => CYBERCOMP_TEST_EMAILS.has(email)
 const assessmentPhase = (value) => value === 'Finale' ? 'Finale' : 'Initiale'
@@ -89,6 +107,62 @@ router.post('/scholarship/applications', asyncRoute(async (req, res) => {
   if (await ScholarshipApplication.findOne({ email, cohort: 'scholarship-2026' })) return res.status(409).json({ message: 'An application has already been submitted with this email address.' })
   const application = await ScholarshipApplication.create({ ...body, country: String(body.country || '').trim(), email, age, dateOfBirth: birthDate, cohort: 'scholarship-2026', status: 'new' })
   res.status(201).json({ id: application._id })
+}))
+
+router.post('/guardians-voice/applications', asyncRoute(async (req, res) => {
+  const body = req.body || {}
+  if (body.website) return res.status(201).json({ received: true })
+
+  const ip = req.ip || req.socket?.remoteAddress || 'unknown'
+  const now = Date.now()
+  const recent = (guardianVoiceSubmissions.get(ip) || []).filter((time) => now - time < 15 * 60 * 1000)
+  if (recent.length >= 4) return res.status(429).json({ message: 'Too many attempts. Please wait a few minutes and try again.' })
+
+  const email = text(body.email).toLowerCase()
+  const age = Number(body.age)
+  const platforms = Array.isArray(body.platforms) ? [...new Set(body.platforms.map(text).filter(Boolean))] : []
+  const socialProfiles = Array.isArray(body.socialProfiles) ? body.socialProfiles.map(text).filter(Boolean) : []
+  const confirmations = body.confirmations || {}
+
+  if (text(body.fullName).length < 2 || text(body.fullName).length > 120) return res.status(400).json({ message: 'Please enter your full name.' })
+  if (!/^\S+@\S+\.\S+$/.test(email) || email.length > 180) return res.status(400).json({ message: 'Please enter a valid email address.' })
+  if (!/^\+[\d\s().-]{7,39}$/.test(text(body.whatsapp))) return res.status(400).json({ message: 'Enter your WhatsApp number with its country code, beginning with +.' })
+  if (!Number.isInteger(age) || age < 1 || age > 120) return res.status(400).json({ message: 'Please enter a valid age.' })
+  if (!text(body.country) || !text(body.city)) return res.status(400).json({ message: 'Country and city are required.' })
+  if (!GUARDIAN_VOICE_OCCUPATIONS.includes(body.occupation)) return res.status(400).json({ message: 'Please select your current occupation or status.' })
+  if (body.occupation === 'Other' && !text(body.otherOccupation)) return res.status(400).json({ message: 'Please specify your current occupation or status.' })
+  if (platforms.some((platform) => !GUARDIAN_VOICE_PLATFORMS.includes(platform))) return res.status(400).json({ message: 'One or more selected platforms are invalid.' })
+  if (socialProfiles.length > 8 || socialProfiles.some((url) => !isWebUrl(url))) return res.status(400).json({ message: 'Social profile links must be valid web addresses, one per line.' })
+  if (typeof body.hasCreatedContent !== 'boolean') return res.status(400).json({ message: 'Please tell us whether you have created digital content before.' })
+  if (body.contentExample && !isWebUrl(text(body.contentExample))) return res.status(400).json({ message: 'The content example must be a valid web address.' })
+  if (wordCount(body.motivation) < 5 || wordCount(body.motivation) > 150) return res.status(400).json({ message: 'Your motivation must be between 5 and 150 words.' })
+  if (!GUARDIAN_VOICE_ISSUES.includes(body.digitalIssue)) return res.status(400).json({ message: 'Please select a digital issue.' })
+  if (body.digitalIssue === 'Other' && !text(body.otherDigitalIssue)) return res.status(400).json({ message: 'Please specify the digital issue you want to address.' })
+  if ([body.trainingCommitment, body.publishingCommitment, body.hasEquipmentAccess].some((value) => typeof value !== 'boolean')) return res.status(400).json({ message: 'Please answer all three challenge commitment questions.' })
+  if (!GUARDIAN_VOICE_DAILY_TIME.includes(body.dailyTime)) return res.status(400).json({ message: 'Please select the time you can dedicate each day.' })
+  if (wordCount(body.challengeAnswer) < 3 || wordCount(body.challengeAnswer) > 100) return res.status(400).json({ message: 'Your 30-second answer must be between 3 and 100 words.' })
+  if (confirmations.selectionAndParticipation !== true || confirmations.rewardsCriteria !== true) return res.status(400).json({ message: 'Please accept both confirmation statements.' })
+
+  if (await GuardianVoiceApplication.exists({ email, campaign: 'guardians-voice-30-day' })) return res.status(409).json({ message: 'An application has already been submitted with this email address.' })
+
+  try {
+    const application = await GuardianVoiceApplication.create({
+      fullName: text(body.fullName), email, whatsapp: text(body.whatsapp), age,
+      gender: text(body.gender), country: text(body.country), city: text(body.city),
+      occupation: body.occupation, otherOccupation: text(body.otherOccupation), platforms,
+      socialProfiles, hasCreatedContent: body.hasCreatedContent, contentExample: text(body.contentExample),
+      motivation: text(body.motivation), digitalIssue: body.digitalIssue,
+      otherDigitalIssue: text(body.otherDigitalIssue), trainingCommitment: body.trainingCommitment,
+      publishingCommitment: body.publishingCommitment, hasEquipmentAccess: body.hasEquipmentAccess, dailyTime: body.dailyTime,
+      challengeAnswer: text(body.challengeAnswer), confirmations: { selectionAndParticipation: true, rewardsCriteria: true },
+    })
+    recent.push(now)
+    guardianVoiceSubmissions.set(ip, recent)
+    res.status(201).json({ id: application._id })
+  } catch (error) {
+    if (error?.code === 11000) return res.status(409).json({ message: 'An application has already been submitted with this email address.' })
+    throw error
+  }
 }))
 
 router.get('/engagements/summary', asyncRoute(async (_req, res) => {
