@@ -68,7 +68,7 @@ new MutationObserver(() => {
     const field = document.getElementById(label.htmlFor)
     if (field?.required && !label.querySelector('b')) label.insertAdjacentHTML('beforeend', ' <b>*</b>')
   })
-}).observe(document.querySelector('#guardianVoiceForm'), { childList:true, subtree:true })
+}).observe(document.querySelector('#guardianVoiceForm'), { childList:true, subtree:true });
 [HTMLInputElement.prototype, HTMLTextAreaElement.prototype, HTMLSelectElement.prototype].forEach((prototype) => {
   const original = prototype.setCustomValidity
   prototype.setCustomValidity = function (message) { return original.call(this, window.guardianVoiceErrorMessage(message)) }
