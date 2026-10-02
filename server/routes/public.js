@@ -38,7 +38,22 @@ const isWebUrl = (value) => {
 
 const isCybercompTestEmail = (email) => CYBERCOMP_TEST_EMAILS.has(email)
 const assessmentPhase = (value) => value === 'Finale' ? 'Finale' : 'Initiale'
-const challengeFields = 'fullName email cybercomp.taken cybercomp.initialTaken cybercomp.finalTaken cybercomp.phase cybercomp.feedback.submittedAt'
+const challengeFields = [
+  'fullName',
+  'email',
+  'cybercomp.taken',
+  'cybercomp.initialTaken',
+  'cybercomp.finalTaken',
+  'cybercomp.initialTotal',
+  'cybercomp.finalTotal',
+  'cybercomp.initialMax',
+  'cybercomp.finalMax',
+  'cybercomp.takenAt',
+  'cybercomp.phase',
+  'cybercomp.total',
+  'cybercomp.answers',
+  'cybercomp.feedback.submittedAt',
+].join(' ')
 
 async function findCybercompApplicant(email) {
   const cyberambassador = await CyberambassadorInscription.findOne({ email, cohort: 'pilot-2026' }).select(challengeFields)
@@ -50,12 +65,29 @@ async function findCybercompApplicant(email) {
   return null
 }
 
-// Match applicants who have not yet submitted this phase. Initiale keeps a
-// legacy fallback; old shared results must not block the newly introduced
-// Finale attempt.
-const phaseAvailableQuery = (phase) => phase === 'Finale'
-  ? { 'cybercomp.finalTaken': { $ne: true } }
-  : { $nor: [{ 'cybercomp.initialTaken': true }, { 'cybercomp.taken': true, 'cybercomp.phase': 'Initiale' }] }
+// Match applicants who have not yet submitted this phase. The phase fallback
+// keeps records created before the independent phase flags from being repeated.
+const phaseAvailableQuery = (phase) => {
+  const field = phase === 'Finale' ? 'finalTaken' : 'initialTaken'
+  return { $nor: [{ [`cybercomp.${field}`]: true }, { 'cybercomp.taken': true, 'cybercomp.phase': phase }] }
+}
+
+async function preserveLegacyPhaseResult({ applicant, model }) {
+  const cybercomp = applicant.cybercomp
+  if (!cybercomp?.taken || !['Initiale', 'Finale'].includes(cybercomp.phase) || !Number.isFinite(cybercomp.total)) return
+
+  const prefix = cybercomp.phase === 'Finale' ? 'final' : 'initial'
+  if (cybercomp[`${prefix}Total`] != null) return
+
+  await model.updateOne(
+    { _id: applicant._id, [`cybercomp.${prefix}Total`]: { $exists: false } },
+    { $set: {
+      [`cybercomp.${prefix}Taken`]: true,
+      [`cybercomp.${prefix}Total`]: cybercomp.total,
+      [`cybercomp.${prefix}Max`]: (cybercomp.answers || []).length * 4 || 84,
+    } }
+  )
+}
 
 async function ensureCybercompTestApplicant(email) {
   const existing = await CyberambassadorInscription.findOne({ email, cohort: 'pilot-2026' })
@@ -227,26 +259,17 @@ router.post('/cyberambassador/cybercomp/access', asyncRoute(async (req, res) => 
     ? { applicant: await ensureCybercompTestApplicant(email), model: CyberambassadorInscription, cohort: 'pilot-2026' }
     : await findCybercompApplicant(email)
   if (!match) return res.status(404).json({ message: 'Cette adresse e-mail ne correspond pas à une candidature CyberAmbassador ou Scholarship.' })
-  const { applicant, model } = match
+  const { applicant } = match
   const alreadyTaken = phase === 'Finale'
-    ? applicant.cybercomp?.finalTaken === true
+    ? applicant.cybercomp?.finalTaken === true || (applicant.cybercomp?.taken === true && applicant.cybercomp?.phase === 'Finale')
     : applicant.cybercomp?.initialTaken === true || (applicant.cybercomp?.taken === true && applicant.cybercomp?.phase === 'Initiale')
   // Explicit test accounts are intentionally reusable so both phases can be
   // exercised repeatedly during QA. Real applicants remain one-attempt-per-phase.
   if (alreadyTaken && !isCybercompTestEmail(email)) return res.status(409).json({ message: `Vous avez déjà passé l’évaluation ${phase}.` })
 
-  // Migrate the legacy single-result record before a Finale result replaces
-  // its phase, so the old Initiale attempt remains protected as well.
-  if (phase === 'Finale' && applicant.cybercomp?.taken === true && applicant.cybercomp?.phase === 'Initiale') {
-    await model.updateOne(
-      { _id: applicant._id, 'cybercomp.initialTotal': { $exists: false } },
-      { $set: {
-        'cybercomp.initialTaken': true,
-        'cybercomp.initialTotal': applicant.cybercomp.total,
-        'cybercomp.initialMax': (applicant.cybercomp.answers || []).length * 4 || 84,
-      } }
-    )
-  }
+  // Preserve whichever legacy score exists before the other phase replaces
+  // the shared compatibility fields (`phase`, `total`, and `answers`).
+  await preserveLegacyPhaseResult(match)
 
   res.json({ applicant: { fullName: applicant.fullName, email: applicant.email, cybercompTaken: Boolean(applicant.cybercomp?.taken), feedbackSubmitted: Boolean(applicant.cybercomp?.feedback?.submittedAt) } })
 }))
@@ -315,6 +338,8 @@ router.post('/cyberambassador/cybercomp/results', asyncRoute(async (req, res) =>
         : 'Hautement spécialisé'
   const domains = Array.isArray(req.body?.domains) ? req.body.domains : []
   if (domains.length !== 5) return res.status(400).json({ message: 'Les résultats des cinq domaines sont requis.' })
+  const existingMatch = await findCybercompApplicant(email)
+  if (existingMatch) await preserveLegacyPhaseResult(existingMatch)
   const availabilityQuery = isCybercompTestEmail(email) ? {} : phaseAvailableQuery(phase)
   const resultFields = {
     'cybercomp.taken': true,
@@ -328,7 +353,7 @@ router.post('/cyberambassador/cybercomp/results', asyncRoute(async (req, res) =>
     'cybercomp.answers': answers,
     'cybercomp.domains': domains.map((domain) => ({ name: String(domain.name || ''), score: Number(domain.score), max: Number(domain.max) })),
   }
-  const applicant = await CyberambassadorInscription.findOneAndUpdate(
+  let applicant = await CyberambassadorInscription.findOneAndUpdate(
     { email, cohort: 'pilot-2026', ...availabilityQuery },
     {
       $set: resultFields,
