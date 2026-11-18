@@ -1,352 +1,246 @@
 /* eslint-disable react/prop-types */
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Agentation } from 'agentation'
 import './reference-document.css'
+import MembershipPage from './MembershipPage'
+import { buildSite } from './content/siteContent'
+import GetInvolvedPage from './GetInvolvedPage'
+import { ArticlePage, BlogPage } from './BlogPage'
+import { WallPage } from './EngagementPages'
+import './site-enhancements.css'
+import './site-impress.css'
+import { API, BASE, Button, CountUp, go, mediaPath, pagePaths, prefersReducedMotion, publicAsset, rich, useScrollProgress, useScrollReveal } from './siteShared'
 
-const copy = {
-  en: {
-    nav: [['Home','home'],['About Us','about'],['Programmes','programs'],['Impact','impact'],['Blog','resources']],
-    involved: 'Get Involved', civic: 'Civic Tech Africa',
-    footerIntro: 'A Cameroonian youth-focused nonprofit building safer, more creative and more inclusive digital communities.',
-    focus: 'Our focus', explore: 'Explore', contact: 'Contact', rights: 'All rights reserved.', reports:'Reports', motto:'Solidarity · Integrity · Excellence',
-    focusLinks:['Digital citizenship','Practical STEM','Youth leadership','Inclusive access'],
-  },
-  fr: {
-    nav: [['Accueil','home'],['À propos','about'],['Programmes','programs'],['Impact','impact'],['Blog','resources']],
-    involved: 'S’engager', civic: 'Tech civique Afrique',
-    footerIntro: 'Une association camerounaise centrée sur la jeunesse, pour des communautés numériques plus sûres, créatives et inclusives.',
-    focus: 'Nos priorités', explore: 'Explorer', contact: 'Contact', rights: 'Tous droits réservés.', reports:'Rapports', motto:'Solidarité · Intégrité · Excellence',
-    focusLinks:['Citoyenneté numérique','STIM pratiques','Leadership des jeunes','Accès inclusif'],
-  },
+const CACHE_KEY = 'sykotiSiteContent'
+
+function readCache() {
+  try { return JSON.parse(localStorage.getItem(CACHE_KEY) || 'null') || {} } catch { return {} }
 }
 
-const content = {
-  home: {
-    en: {
-      pill:'Civic Tech • Cameroon • Central Africa', title:<>Shaping a <em>human-centred</em> technological future.</>,
-      lead:'We equip young people with digital safety, practical STEM and leadership skills—with particular attention to girls and young women.',
-      primary:['Explore programmes','programs'], secondary:['See our impact','impact'],
-      stats:[['217','Young people reached'],['15','CyberAmbassador graduates'],['42','Scholarship learners'],['14','Youth-led projects']],
-      section:'Areas of intervention', sectionLead:'Practical pathways that help young people learn, create and act with confidence.',
-      cards:[['security','Digital citizenship','Safer habits, critical thinking and protection from online harm.'],['code','Practical STEM','Hands-on technology learning connected to local realities.'],['diversity_3','Inclusive access','Youth-focused programmes with particular attention to girls and young women.'],['lightbulb','Innovation','Turning knowledge into useful ideas and community tools.'],['trending_up','Project support','Mentorship that helps youth-led initiatives grow.'],['campaign','Leadership','Young voices contributing to digital rights and policy.']],
-    },
-    fr: {
-      pill:'Tech civique • Cameroun • Afrique centrale', title:<>Construire un avenir technologique <em>centré sur l’humain.</em></>,
-      lead:'Nous outillons les jeunes en sécurité numérique, STIM pratiques et leadership, avec une attention particulière aux filles et jeunes femmes.',
-      primary:['Découvrir les programmes','programs'], secondary:['Voir notre impact','impact'],
-      stats:[['217','Jeunes touchés'],['15','CyberAmbassadeurs diplômés'],['42','Bénéficiaires de bourses'],['14','Projets portés par des jeunes']],
-      section:'Domaines d’intervention', sectionLead:'Des parcours pratiques pour apprendre, créer et agir avec confiance.',
-      cards:[['security','Citoyenneté numérique','Bons réflexes, esprit critique et protection contre les risques en ligne.'],['code','STIM pratiques','Un apprentissage technologique concret, lié aux réalités locales.'],['diversity_3','Accès inclusif','Des programmes jeunesse avec une attention particulière aux filles et jeunes femmes.'],['lightbulb','Innovation','Transformer les connaissances en idées et outils utiles.'],['trending_up','Accompagnement','Du mentorat pour faire grandir les initiatives des jeunes.'],['campaign','Leadership','Des voix jeunes engagées pour les droits et politiques numériques.']],
-    },
-  },
-  about: {
-    en:{pill:'About Sykoti Center',title:'Youth, technology and the power to act.',lead:'Sykoti Center is a Cameroonian nonprofit helping young people understand, use and shape technology responsibly.',primary:['Our programmes','programs'],section:'What guides us',sectionLead:'We combine practical learning, dignity and community action.',cards:[['Our main objective','Make digital knowledge useful, accessible and safe for young people by connecting practical digital citizenship, skills development and opportunities to create meaningful solutions in their communities.',null,'community-action.jpg'],['Mission','We help young people build the knowledge, habits and confidence they need to navigate digital spaces safely, learn useful skills and participate actively in the communities they call home.'],['Vision','We imagine African youth shaping technology with confidence: questioning what they encounter online, creating with purpose and contributing to a more inclusive and responsible digital future.'],['Approach','We learn from lived realities, explain complex subjects clearly, practise through concrete situations and share responsibility with participants, mentors and community partners.']],feature:'Youth first. Inclusion by design.',featureText:'Our work is open to young people of all genders, with particular attention to barriers faced by girls and young women.'},
-    fr:{pill:'À propos de Sykoti Center',title:'Jeunesse, technologie et pouvoir d’agir.',lead:'Sykoti Center est une association camerounaise qui aide les jeunes à comprendre, utiliser et façonner la technologie de manière responsable.',primary:['Nos programmes','programs'],section:'Ce qui nous guide',sectionLead:'Nous réunissons apprentissage pratique, dignité et action communautaire.',cards:[['Notre objectif principal','Rendre les savoirs numériques utiles, accessibles et sûrs pour les jeunes en reliant citoyenneté numérique, développement des compétences et occasions de créer des solutions utiles dans leurs communautés.',null,'community-action.jpg'],['Mission','Aider les jeunes à développer les connaissances, les habitudes et la confiance nécessaires pour évoluer dans les espaces numériques, apprendre des compétences utiles et participer activement à la vie de leurs communautés.'],['Vision','Nous imaginons une jeunesse africaine qui façonne la technologie avec confiance : capable de questionner ce qu’elle rencontre en ligne, de créer avec intention et de contribuer à un avenir numérique plus inclusif et responsable.'],['Approche','Nous partons des réalités vécues, expliquons les sujets complexes avec clarté, pratiquons à partir de situations concrètes et partageons la responsabilité avec les participants, mentors et partenaires communautaires.']],feature:'La jeunesse d’abord. L’inclusion dès la conception.',featureText:'Nos actions sont ouvertes aux jeunes de tous genres, avec une attention particulière aux obstacles rencontrés par les filles et jeunes femmes.'},
-  },
-  programs: {
-    en:{pill:'Programmes & actions',title:'Clear pathways from learning to action.',lead:'Focused programmes, practical tools and human support for young people.',cards:[['CyberAmbassador','A structured digital citizenship, safety and leadership journey.','cyberambassador'],['Scholarships & workshops','Bilingual access, practical sessions and community learning for schools and youth groups.','programs']],section:'How learning works',steps:[['01','Understand','Explore real digital situations.'],['02','Practice','Build useful habits and skills.'],['03','Create','Apply learning to a project.'],['04','Share','Support peers and communities.']]},
-    fr:{pill:'Programmes & actions',title:'Des parcours clairs, de l’apprentissage à l’action.',lead:'Des programmes ciblés, des outils pratiques et un accompagnement humain pour les jeunes.',cards:[['CyberAmbassador','Un parcours structuré de citoyenneté, sécurité et leadership numériques.','cyberambassador'],['Bourses & ateliers','Un accès bilingue, des sessions pratiques et un apprentissage communautaire pour les écoles et groupes de jeunes.','programs']],section:'Comment se déroule l’apprentissage',steps:[['01','Comprendre','Explorer des situations numériques réelles.'],['02','Pratiquer','Développer des réflexes et compétences utiles.'],['03','Créer','Appliquer les acquis dans un projet.'],['04','Partager','Soutenir ses pairs et sa communauté.']]},
-  },
-  impact: {
-    en:{pill:'Impact & evidence',title:'Progress we can show, not promises we cannot.',lead:'We report participation, learning and community action clearly and responsibly.',stats:[['217','People reached'],['15','Graduates'],['42','Scholarship learners'],['14','Youth-led projects']],section:'Evidence from the work',cards:[['Structured learning','Four connected modules with practical missions.'],['Community action','Projects translate learning into local contribution.'],['Participant feedback','Young people help us improve every cohort.']]},
-    fr:{pill:'Impact & preuves',title:'Des progrès visibles, sans promesses exagérées.',lead:'Nous présentons clairement la participation, les apprentissages et les actions communautaires.',stats:[['217','Personnes touchées'],['15','Diplômés'],['42','Bénéficiaires de bourses'],['14','Projets de jeunes']],section:'Les preuves de notre action',cards:[['Apprentissage structuré','Quatre modules reliés à des missions pratiques.'],['Action communautaire','Des projets qui transforment les acquis en contribution locale.'],['Retours des participants','Les jeunes nous aident à améliorer chaque cohorte.']]},
-  },
-  resources: {
-    en:{pill:'Blog & resources',title:'Useful knowledge for safer digital lives.',lead:'Short, practical resources drawn from our programmes and field experience.',cards:[['Digital safety','Simple guidance for protecting accounts, data and wellbeing.'],['Information literacy','Tools for verification, critical thinking and responsible AI use.'],['Field stories','Lessons from workshops, cohorts and youth-led projects.']],primary:['Browse CyberAmbassador','cyberambassador']},
-    fr:{pill:'Blog & ressources',title:'Des connaissances utiles pour une vie numérique plus sûre.',lead:'Des ressources courtes et pratiques issues de nos programmes et de l’expérience de terrain.',cards:[['Sécurité numérique','Des conseils simples pour protéger comptes, données et bien-être.'],['Éducation aux médias','Des outils de vérification, d’esprit critique et d’usage responsable de l’IA.'],['Récits de terrain','Les leçons de nos ateliers, cohortes et projets portés par des jeunes.']],primary:['Découvrir CyberAmbassador','cyberambassador']},
-  },
-  'get-involved': {
-    en:{pill:"Join Cameroon's civic tech effort",title:'Partner, volunteer or support Sykoti Center.',lead:'Help young people access practical digital learning and turn knowledge into community action.',primary:['Become a partner','mailto:contact@sykoticenter.com'],secondary:['Volunteer with us','mailto:contact@sykoticenter.com'],section:'Choose how to contribute',cards:[['Partner','Fund or host a programme for young people.'],['Volunteer','Contribute expertise, mentoring or facilitation.'],['Support access','Help provide devices, connectivity or learning resources.']]},
-    fr:{pill:'Rejoindre notre action',title:'Devenir partenaire, bénévole ou soutien de Sykoti Center.',lead:'Aidez les jeunes à accéder à un apprentissage numérique pratique et à agir dans leurs communautés.',primary:['Devenir partenaire','mailto:contact@sykoticenter.com'],secondary:['Devenir bénévole','mailto:contact@sykoticenter.com'],section:'Choisissez votre contribution',cards:[['Partenariat','Financer ou accueillir un programme pour les jeunes.'],['Bénévolat','Apporter une expertise, du mentorat ou de la facilitation.'],['Soutenir l’accès','Contribuer en équipements, connexion ou ressources pédagogiques.']]},
-  },
-  reports: {
-    en:{pill:'Reports & downloads',title:'Evidence made accessible.',lead:'Download concise reports about our programmes, learning and community action.',cards:[['2026 Impact Brief','A concise view of participation, delivery and early outcomes.'],['CyberAmbassador Overview','Programme structure, modules and participant journey.'],['Partnership Note','Ways institutions can support or host the work.']]},
-    fr:{pill:'Rapports & téléchargements',title:'Des preuves accessibles.',lead:'Téléchargez des rapports concis sur nos programmes, apprentissages et actions communautaires.',cards:[['Note d’impact 2026','Une vue concise de la participation, des actions et premiers résultats.'],['Présentation CyberAmbassador','Structure, modules et parcours des participants.'],['Note de partenariat','Les possibilités pour soutenir ou accueillir nos actions.']]},
-  },
+let sitePromise
+function useSiteContent() {
+  const [site, setSite] = useState(() => buildSite(readCache()))
+  useEffect(() => {
+    let active = true
+    sitePromise ||= fetch(`${API}/site-content`).then((r) => (r.ok ? r.json() : null)).catch(() => null)
+    sitePromise.then((data) => {
+      if (!active || !data?.pages) return
+      try { localStorage.setItem(CACHE_KEY, JSON.stringify(data.pages)) } catch { /* storage unavailable */ }
+      setSite(buildSite(data.pages))
+    })
+    return () => { active = false }
+  }, [])
+  return site
 }
 
-const extras = {
-  home: {
-    en:[
-      {k:'Featured initiatives',t:'Two pathways into practical digital learning.',theme:'soft initiatives',cards:[['CyberAmbassador','Full learning and leadership journey.','cyberambassador','community-action.jpg'],['100 Training Scholarships','Bilingual access to foundational modules.','scholarship','graduation-ceremony.png']]},
-      {k:'Our values',t:'How we choose to work.',theme:'values',cards:[['Solidarity','We learn and build with communities.'],['Integrity','We communicate evidence honestly.'],['Excellence','We improve through practice and feedback.']]},
-      {k:'People behind the work',t:'Leadership and youth contributors.',theme:'people',cards:[['Ing. Ningha Catelle','Founding president of Sykoti Center, shaping the organisation’s direction and making sure every programme remains grounded in practical learning, responsibility and community needs.',null,'mokam-dora.jpeg','Founding president'],['Youth Fellows','Young participants who learn, test ideas and share what works. Their questions, feedback and projects help turn the programme into an experience that speaks to real digital lives.',null,'kouatchou-lyne-dehlia.jpeg','Youth participants'],['Technical Mentors','Practitioners who bring experience in technology, digital safety and learning design. They help participants connect concepts to concrete situations and build confidence through practice.',null,'samson-fawa.jpeg','Technical mentors'],['Community Leads','Young people who carry useful knowledge beyond the platform. They help create conversations, support their peers and connect learning with positive action in their schools and communities.',null,'lesly-voumo.jpeg','Community leads']]},
-      {k:'Latest insights',t:'Short reads from programmes and the field.',theme:'soft content',cards:[['Safer digital habits','Practical steps for everyday online life.','resources','cyber-attacks-webinar.png'],['Learning through real situations','Why practice matters more than warnings.','resources','platform-module.png'],['From learner to leader','How youth projects extend programme impact.','resources','jeunes-connectes-workshop.png']]},
-      {k:'Build with us',t:'Help more young people learn, create and lead.',theme:'banner',action:['Get involved','get-involved']},
-    ],
-    fr:[
-      {k:'Initiatives phares',t:'Deux portes d’entrée vers un apprentissage numérique pratique.',theme:'soft initiatives',cards:[['CyberAmbassador','Parcours complet de formation et de leadership.','cyberambassador','community-action.jpg'],['100 bourses de formation','Accès bilingue aux modules fondamentaux.','scholarship','graduation-ceremony.png']]},
-      {k:'Nos valeurs',t:'Notre manière de travailler.',theme:'values',cards:[['Solidarité','Apprendre et construire avec les communautés.'],['Intégrité','Communiquer les résultats avec honnêteté.'],['Excellence','Progresser par la pratique et les retours.']]},
-      {k:'Les personnes derrière l’action',t:'',theme:'people',cards:[['Ing. Ningha Catelle','Président-fondateur de Sykoti Center, il porte l’orientation de l’organisation et veille à ce que chaque programme reste ancré dans l’apprentissage pratique, la responsabilité et les besoins des communautés.',null,'mokam-dora.jpeg','Président-fondateur'],['Jeunes participants','Ils apprennent, testent des idées et partagent ce qui fonctionne. Leurs questions, leurs retours et leurs projets rendent le programme plus proche des réalités numériques vécues au quotidien.',null,'kouatchou-lyne-dehlia.jpeg','Participants jeunesse'],['Mentors techniques','Des praticiens apportent leur expérience de la technologie, de la sécurité numérique et de la pédagogie. Ils aident les participants à relier les notions aux situations concrètes et à progresser par la pratique.',null,'samson-fawa.jpeg','Mentors techniques'],['Relais communautaires','Des jeunes qui transmettent les connaissances au-delà de la plateforme. Ils créent des échanges, soutiennent leurs pairs et relient l’apprentissage à des actions positives dans leurs écoles et communautés.',null,'lesly-voumo.jpeg','Relais communautaires']]},
-      {k:'Derniers contenus',t:'Des lectures courtes issues des programmes et du terrain.',theme:'soft content',cards:[['Bons réflexes numériques','Des gestes pratiques pour la vie en ligne.','resources','cyber-attacks-webinar.png'],['Apprendre par des situations réelles','Pourquoi la pratique compte plus que les avertissements.','resources','platform-module.png'],['De l’apprenant au leader','Comment les projets des jeunes prolongent l’impact.','resources','jeunes-connectes-workshop.png']]},
-      {k:'Construisons ensemble',t:'Aidez davantage de jeunes à apprendre, créer et diriger.',theme:'banner',action:['S’engager','get-involved']},
-    ],
-  },
-  about: {
-    en:[
-      {k:'Our origin',t:'Built in response to connected youth challenges.',theme:'soft origin',cards:[]},
-      {k:'Today and tomorrow',t:'Delivered work and long-term direction.',theme:'today',cards:[['CyberAmbassador','A structured learning and leadership journey for safer digital participation.',null,null,'Flagship program','Young people · Cohort-based · Platform + guided follow-up'],['Threat Insights','Accessible analysis and guidance around emerging online risks.',null,null,'Resource','Communities · Public resources'],['Conversations','Webinars and discussions around technology, safety and society.',null,null,'Resource','Open audiences · Online sessions'],['Sykoti Safety Lab','Testing practical responses to digital-safety challenges.',null,null,'Experimental initiative','Partners · Applied exploration']]},
-      {k:'Our method',t:'A simple four-step approach.',theme:'method',cards:[['Listen','Start from lived realities.'],['Learn','Build clear foundations.'],['Practice','Use skills in real situations.'],['Multiply','Share knowledge through community action.']]},
-      {k:'Who we serve',t:'Youth first, with inclusion built in.',theme:'audiences',cards:[['Young people','Learners, creators and future leaders.',null,'community-action.jpg'],['Girls & young women','Particular attention to barriers in technology access.',null,'graduation-group.jpg'],['Educators','Partners who extend practical learning.',null,'platform-module.png'],['Community organisations','Local actors connecting programmes to needs.',null,'graduation-ceremony.png']]},
-      {k:'Leadership & community',t:'A growing network of programme stewards, mentors and youth fellows.',theme:'banner',action:['Our team','about-team']},
-    ],
-    fr:[
-      {k:'Notre origine',t:'Une réponse à plusieurs défis liés à la jeunesse.',theme:'soft origin',cards:[]},
-      {k:'Aujourd’hui',t:'Actions réalisées et direction à long terme.',theme:'today',cards:[['CyberAmbassador','Un parcours structuré de formation et de leadership pour une participation numérique plus sûre.',null,null,'Programme phare','Jeunes · Cohorte · Plateforme + accompagnement'],['Veille sur les menaces','Des analyses et conseils accessibles sur les risques numériques émergents.',null,null,'Ressource','Communautés · Ressources publiques'],['Conversations','Des webinaires et échanges autour de la technologie, de la sécurité et de la société.',null,null,'Ressource','Publics ouverts · Sessions en ligne'],['Sykoti Safety Lab','Des réponses pratiques aux défis liés à la sécurité numérique.',null,null,'Initiative expérimentale','Partenaires · Exploration appliquée']]},
-      {k:'Notre méthode',t:'Une approche simple en quatre étapes.',theme:'method',cards:[['Écouter','Partir des réalités vécues.'],['Apprendre','Construire des bases claires.'],['Pratiquer','Utiliser les compétences en situation réelle.'],['Multiplier','Partager par l’action communautaire.']]},
-      {k:'Nos publics',t:'La jeunesse d’abord, avec une inclusion réelle.',theme:'audiences',cards:[['Jeunes','Apprenants, créateurs et futurs leaders.',null,'community-action.jpg'],['Filles et jeunes femmes','Attention particulière aux obstacles d’accès à la technologie.',null,'graduation-group.jpg'],['Éducateurs','Des partenaires qui prolongent l’apprentissage.',null,'platform-module.png'],['Organisations communautaires','Des acteurs locaux proches des besoins.',null,'graduation-ceremony.png']]},
-      {k:'Leadership & communauté',t:'Un réseau de responsables, mentors et jeunes participants.',theme:'banner',action:['Notre équipe','about-team']},
-    ],
-  },
-  programs: {
-    en:[
-      {k:'Programme snapshot',t:'Focused delivery, visible progress.',cards:[['4 modules','Connected digital learning.'],['2 languages','English and French access.'],['1 pathway','From learning to community action.']]},
-      {k:'CyberAmbassador / CyberA-Rise',t:'The complete flagship journey.',theme:'soft',cards:[['Curriculum','Digital world, safety, verification and leadership.'],['Cohort support','Platform learning plus human follow-up.'],['Completion','Assessment, project and recognition.']],action:['Open CyberAmbassador','cyberambassador']},
-      {k:'100 Training Scholarships',t:'A shorter bilingual access route.',cards:[['Foundational access','First CyberAmbassador modules.'],['Guided progression','Clear lessons and practical checks.'],['Next step','A bridge toward deeper programmes.']],action:['View scholarships','scholarship']},
-      {k:'Workshops & community initiatives',t:'Short formats connected to local needs.',theme:'soft',cards:[['STEM discovery','Hands-on exploration and problem solving.'],['Digital safety clinics','Account protection, scams and response.'],['Media literacy sessions','Verification and responsible AI use.'],['Open learning resources','Reusable guides for communities.']]},
-      {k:'Programme moments',t:'Learning, collaboration and community action.',media:['jeunes-connectes-workshop.png','community-action.jpg','graduation-group.jpg']},
-      {k:'Find your pathway',t:'Join as a learner, mentor, school or partner.',theme:'banner',action:['Start a conversation','get-involved']},
-    ],
-    fr:[
-      {k:'Aperçu des programmes',t:'Des actions ciblées et des progrès visibles.',cards:[['4 modules','Un parcours numérique cohérent.'],['2 langues','Accès en français et en anglais.'],['1 trajectoire','De l’apprentissage à l’action communautaire.']]},
-      {k:'CyberAmbassador / CyberA-Rise',t:'Le parcours phare complet.',theme:'soft',cards:[['Programme','Monde numérique, sécurité, vérification et leadership.'],['Accompagnement','Plateforme et suivi humain.'],['Finalisation','Évaluation, projet et reconnaissance.']],action:['Ouvrir CyberAmbassador','cyberambassador']},
-      {k:'100 bourses de formation',t:'Une voie d’accès bilingue plus courte.',cards:[['Accès fondamental','Premiers modules de CyberAmbassador.'],['Progression guidée','Leçons claires et exercices pratiques.'],['Étape suivante','Un pont vers des parcours plus approfondis.']],action:['Voir les bourses','scholarship']},
-      {k:'Ateliers & initiatives communautaires',t:'Des formats courts liés aux besoins locaux.',theme:'soft',cards:[['Découverte STIM','Exploration pratique et résolution de problèmes.'],['Cliniques de sécurité','Comptes, arnaques et réaction.'],['Éducation aux médias','Vérification et usage responsable de l’IA.'],['Ressources ouvertes','Guides réutilisables par les communautés.']]},
-      {k:'Moments de programme',t:'Apprentissage, collaboration et action communautaire.',media:['jeunes-connectes-workshop.png','community-action.jpg','graduation-group.jpg']},
-      {k:'Trouvez votre parcours',t:'Participez comme apprenant, mentor, école ou partenaire.',theme:'banner',action:['Démarrer la conversation','get-involved']},
-    ],
-  },
-  impact: {
-    en:[
-      {k:'Regional footprint',t:'Work rooted in Cameroon and shared across connected communities.',theme:'soft',media:['graduation-group.jpg','community-action.jpg']},
-      {k:'Youth-led projects',t:'Learning translated into practical action.',cards:[['Cyber-hygiene sessions','Peer learning for safer accounts.'],['Verification workshops','Tools for questioning online claims.'],['Privacy toolkits','Accessible guidance for local groups.'],['Safe social circles','Peer support for healthier online habits.']]},
-      {k:'Community voice',t:'“The programme helped me question information and explain safer choices to others.”',theme:'quote'},
-      {k:'Achievements and ambitions',t:'Clear separation between delivered work and future goals.',theme:'soft',cards:[['Achieved in 2026','Structured learning, cohort delivery and community projects.'],['Next horizon','More local delivery partners and youth-led solutions.']]},
-      {k:'Data integrity',t:'Participation, completion and outcome data are reported separately.',action:['Request the impact brief','reports']},
-    ],
-    fr:[
-      {k:'Empreinte régionale',t:'Une action ancrée au Cameroun et partagée entre communautés.',theme:'soft',media:['graduation-group.jpg','community-action.jpg']},
-      {k:'Projets portés par les jeunes',t:'Des apprentissages transformés en action.',cards:[['Sessions de cyber-hygiène','Apprentissage entre pairs pour sécuriser les comptes.'],['Ateliers de vérification','Des outils pour questionner les contenus en ligne.'],['Kits de confidentialité','Des conseils accessibles aux groupes locaux.'],['Cercles numériques sûrs','Du soutien entre pairs pour de meilleurs usages.']]},
-      {k:'Parole de participant',t:'« Le programme m’a aidé à vérifier l’information et à partager de meilleurs réflexes. »',theme:'quote'},
-      {k:'Réalisations et ambitions',t:'Une distinction claire entre actions menées et objectifs futurs.',theme:'soft',cards:[['Réalisé en 2026','Formation structurée, cohorte et projets communautaires.'],['Prochaine étape','Davantage de partenaires locaux et de solutions portées par les jeunes.']]},
-      {k:'Intégrité des données',t:'Participation, complétion et résultats sont présentés séparément.',action:['Demander la note d’impact','reports']},
-    ],
-  },
-  resources: {
-    en:[
-      {k:'Browse by topic',t:'Digital safety · STEM · media literacy · youth leadership',theme:'soft'},
-      {k:'Featured insight',t:'Why practical digital citizenship starts with real situations.',cards:[['Read the field note','Lessons from participant questions and programme delivery.','resources','jeunes-connectes-workshop.png']]},
-      {k:'Recent articles',t:'Concise resources for learners, educators and communities.',cards:[['Understanding scams','Recognise pressure, impersonation and suspicious requests.'],['Verifying visual content','Check source, context and signs of manipulation.'],['Using AI responsibly','Question outputs, protect data and verify important claims.'],['Supporting youth online','Create room for questions without judgement.']]},
-      {k:'Civic Tech Dispatch',t:'Receive occasional programme notes and practical resources.',theme:'soft',action:['Subscribe by email','mailto:contact@sykoticenter.com?subject=Civic Tech Dispatch']},
-      {k:'Share a field story',t:'Contribute a grassroots case study or practical lesson.',theme:'banner',action:['Submit an idea','mailto:contact@sykoticenter.com?subject=Field story']},
-    ],
-    fr:[
-      {k:'Explorer par thème',t:'Sécurité numérique · STIM · médias · leadership des jeunes',theme:'soft'},
-      {k:'À la une',t:'La citoyenneté numérique pratique commence par des situations réelles.',cards:[['Lire la note de terrain','Leçons issues des questions des participants et de la mise en œuvre.','resources','jeunes-connectes-workshop.png']]},
-      {k:'Articles récents',t:'Des ressources concises pour jeunes, éducateurs et communautés.',cards:[['Comprendre les arnaques','Reconnaître la pression, l’usurpation et les demandes suspectes.'],['Vérifier une image','Contrôler la source, le contexte et les manipulations.'],['Utiliser l’IA avec responsabilité','Questionner, protéger ses données et vérifier.'],['Accompagner les jeunes en ligne','Créer un espace de dialogue sans jugement.']]},
-      {k:'Bulletin Tech civique',t:'Recevez occasionnellement nos ressources et nouvelles.',theme:'soft',action:['S’abonner par email','mailto:contact@sykoticenter.com?subject=Bulletin Tech civique']},
-      {k:'Partager une expérience',t:'Proposez une étude de cas ou une leçon de terrain.',theme:'banner',action:['Proposer une idée','mailto:contact@sykoticenter.com?subject=Récit de terrain']},
-    ],
-  },
-  'get-involved': {
-    en:[
-      {k:'Donation & sponsorship',t:'Choose a practical contribution level.',cards:[['Learning access','Support connectivity and learning materials.'],['Workshop support','Help deliver a local youth session.'],['Cohort sponsorship','Fund guided learning for a group.'],['Programme partner','Co-develop a longer-term initiative.']]},
-      {k:'Transparency',t:'Support is tied to clear programme needs and documented delivery.',theme:'soft'},
-      {k:'Non-financial involvement',t:'Time and expertise matter too.',cards:[['Mentor','Guide learners and projects.'],['Facilitator','Help deliver practical sessions.'],['Technical contributor','Strengthen tools and learning resources.'],['Community host','Bring an activity to your network.']]},
-      {k:'Partner trust',t:'We work with schools, youth groups, civil society and technology actors.',theme:'soft',media:['community-action.jpg','graduation-ceremony.png']},
-      {k:'Ready to contribute?',t:'Tell us your role, availability and the support you can offer.',theme:'banner',action:['Send your interest','mailto:contact@sykoticenter.com?subject=Get involved']},
-    ],
-    fr:[
-      {k:'Don & parrainage',t:'Choisissez un niveau de contribution concret.',cards:[['Accès à la formation','Soutenir la connexion et les supports pédagogiques.'],['Soutien à un atelier','Aider à organiser une session locale.'],['Parrainage de cohorte','Financer l’accompagnement d’un groupe.'],['Partenariat programme','Co-construire une initiative à long terme.']]},
-      {k:'Transparence',t:'Chaque soutien répond à un besoin clair et à une action documentée.',theme:'soft'},
-      {k:'Contribution non financière',t:'Le temps et l’expertise comptent aussi.',cards:[['Mentor','Accompagner les apprenants et leurs projets.'],['Facilitateur','Participer aux sessions pratiques.'],['Contributeur technique','Renforcer les outils et ressources.'],['Hôte communautaire','Accueillir une activité dans votre réseau.']]},
-      {k:'Confiance des partenaires',t:'Nous travaillons avec écoles, groupes de jeunes, société civile et acteurs technologiques.',theme:'soft',media:['community-action.jpg','graduation-ceremony.png']},
-      {k:'Prêt à contribuer ?',t:'Présentez votre rôle, disponibilité et forme de soutien.',theme:'banner',action:['Envoyer votre intérêt','mailto:contact@sykoticenter.com?subject=S’engager']},
-    ],
-  },
-  reports: {
-    en:[
-      {k:'Document artifacts',t:'Concise material for partners, educators and communities.',cards:[['Impact brief','Participation, delivery and early outcomes.'],['Programme overview','CyberAmbassador structure and learning journey.'],['Data note','Definitions and responsible interpretation.']]},
-      {k:'Report contents',t:'Context · programmes · participation · projects · governance · next steps',theme:'soft'},
-      {k:'Resource allocation',t:'A high-level view of learning, access, delivery and programme support.',cards:[['Learning delivery','Facilitation and participant support.'],['Access','Connectivity, tools and materials.'],['Community action','Youth projects and local activities.'],['Programme operations','Coordination, safeguarding and reporting.']]},
-      {k:'Need detailed data?',t:'Contact us for partner due diligence or research questions.',theme:'banner',action:['Request information','mailto:contact@sykoticenter.com?subject=Report data request']},
-    ],
-    fr:[
-      {k:'Documents disponibles',t:'Des supports concis pour partenaires, éducateurs et communautés.',cards:[['Note d’impact','Participation, actions et premiers résultats.'],['Présentation du programme','Structure et parcours CyberAmbassador.'],['Note méthodologique','Définitions et lecture responsable des données.']]},
-      {k:'Contenu du rapport',t:'Contexte · programmes · participation · projets · gouvernance · prochaines étapes',theme:'soft'},
-      {k:'Répartition des ressources',t:'Une vue générale de la formation, de l’accès et de l’accompagnement.',cards:[['Formation','Facilitation et suivi des participants.'],['Accès','Connexion, outils et supports.'],['Action communautaire','Projets de jeunes et activités locales.'],['Fonctionnement','Coordination, protection et reporting.']]},
-      {k:'Besoin de données détaillées ?',t:'Contactez-nous pour une vérification partenaire ou une recherche.',theme:'banner',action:['Demander des informations','mailto:contact@sykoticenter.com?subject=Demande de données']},
-    ],
-  },
+function useCmsData() {
+  const [data, setData] = useState({ team: [], articles: [], programs: [], reports: [], media: [] })
+  useEffect(() => {
+    let active = true
+    const get = (path, fallback) => fetch(`${API}${path}`).then((r) => (r.ok ? r.json() : fallback)).catch(() => fallback)
+    Promise.all([get('/team', []), get('/articles', []), get('/programs', []), get('/reports', []), get('/cyberambassador/content', {})])
+      .then(([team, articles, programs, reports, cyber]) => { if (active) setData({ team, articles, programs, reports, media: cyber.media || [] }) })
+    return () => { active = false }
+  }, [])
+  return data
 }
 
-const baseDetails = {
-  home:{
-    en:'Our areas of intervention respond to the realities young people face when learning, communicating and creating with technology. Each pillar combines accessible explanations, practical exercises and opportunities to apply knowledge in everyday life. Together, they build confidence without separating safety, creativity, inclusion and leadership.',
-    fr:'Nos domaines d’intervention répondent aux réalités vécues par les jeunes lorsqu’ils apprennent, communiquent et créent avec la technologie. Chaque pilier associe des explications accessibles, des exercices pratiques et des occasions d’appliquer les connaissances dans la vie quotidienne. Ensemble, ils développent la confiance sans séparer sécurité, créativité, inclusion et leadership.',
-  },
-  about:{
-    en:'Sykoti Center was created from a simple observation: access to technology is not enough when young people lack practical guidance, safe learning spaces and opportunities to turn ideas into action. Our work therefore connects digital citizenship, STEM learning, innovation, mentorship and community participation within one coherent youth-focused mission.',
-    fr:'Sykoti Center est née d’un constat simple : l’accès à la technologie ne suffit pas lorsque les jeunes manquent de repères pratiques, d’espaces d’apprentissage sûrs et d’occasions de transformer leurs idées en action. Notre travail relie donc citoyenneté numérique, apprentissage des STIM, innovation, mentorat et participation communautaire dans une même mission centrée sur la jeunesse.',
-  },
-  programs:{
-    en:'Our programmes are designed as connected learning journeys rather than isolated events. Participants first understand the subject, then practise with realistic situations, receive guidance and finally apply what they have learned through a project or community contribution. The format varies by programme, but practical usefulness and responsible participation remain constant.',
-    fr:'Nos programmes sont conçus comme des parcours d’apprentissage reliés, et non comme des événements isolés. Les participants comprennent d’abord le sujet, pratiquent ensuite à partir de situations réalistes, bénéficient d’un accompagnement puis appliquent leurs acquis dans un projet ou une contribution communautaire. Le format varie, mais l’utilité pratique et la participation responsable restent constantes.',
-  },
-  impact:{
-    en:'We distinguish carefully between people reached, learners enrolled, programme completion, projects delivered and longer-term change. This avoids combining unrelated figures or presenting participation as proof of impact. Our evidence grows with delivery and is strengthened through participant feedback, documented activities and transparent reporting methods.',
-    fr:'Nous distinguons avec attention les personnes touchées, les apprenants inscrits, la complétion des programmes, les projets réalisés et les changements à plus long terme. Cela évite de mélanger des chiffres différents ou de présenter la participation comme une preuve d’impact. Nos données progressent avec les actions, les retours des participants et une méthode de suivi transparente.',
-  },
-  resources:{
-    en:'This knowledge space translates programme learning into resources that can be understood and reused beyond a cohort. Articles and field notes address common questions about online safety, information verification, artificial intelligence, digital wellbeing and youth leadership. The aim is to make complex topics practical without oversimplifying the risks or the choices involved.',
-    fr:'Cet espace de connaissances transforme les apprentissages des programmes en ressources compréhensibles et réutilisables au-delà d’une cohorte. Les articles et notes de terrain répondent aux questions courantes sur la sécurité en ligne, la vérification de l’information, l’intelligence artificielle, le bien-être numérique et le leadership des jeunes, sans simplifier excessivement les enjeux.',
-  },
-  'get-involved':{
-    en:'Support can take several forms: funding a learning activity, sharing professional expertise, mentoring participants, hosting a local session or helping provide devices and connectivity. We encourage contributors to choose a role that matches their capacity and to begin with a clear conversation about needs, responsibilities, safeguarding and expected outcomes.',
-    fr:'Le soutien peut prendre plusieurs formes : financer une activité, partager une expertise professionnelle, accompagner des participants, accueillir une session locale ou contribuer en équipements et connexion. Nous invitons chaque personne ou organisation à choisir un rôle adapté à ses moyens et à commencer par un échange clair sur les besoins, responsabilités, mesures de protection et résultats attendus.',
-  },
-  reports:{
-    en:'Our reporting materials bring together programme context, delivery choices, participation figures, learning evidence and community activities. They are intended for partners, educators, researchers and community organisations that need a clear account of what was delivered, how figures were interpreted and which ambitions remain future objectives rather than completed results.',
-    fr:'Nos documents de suivi réunissent le contexte des programmes, les choix de mise en œuvre, les chiffres de participation, les preuves d’apprentissage et les actions communautaires. Ils s’adressent aux partenaires, éducateurs, chercheurs et organisations qui ont besoin de comprendre ce qui a été réalisé, comment les données sont interprétées et quels objectifs restent à venir.',
-  },
+// Sections tagged with a `source` are filled from published admin records when available.
+function cmsCards(section, cms) {
+  if (section.source === 'team' && cms.team.length) return cms.team.slice(0, 8).map((m, i) => [m.name, m.biography || m.role, null, m.photoUrl || `/img/placeholders/person-${(i % 8) + 1}.svg`, m.role])
+  if (section.source === 'articles' && cms.articles.length) return cms.articles.slice(0, 4).map((a) => [a.title, a.excerpt, `article:${a.slug}`, a.coverUrl])
+  if (section.source === 'programs' && cms.programs.length) return cms.programs.slice(0, 3).map((p) => [p.title, p.description || p.summary, p.slug === 'cyberambassador' ? 'cyberambassador' : null, p.coverUrl])
+  if (section.source === 'reports' && cms.reports.length) return cms.reports.slice(0, 4).map((r) => [r.title, r.description, r.fileUrl ? publicAsset(r.fileUrl) : null, r.coverUrl])
+  return section.cards
 }
 
-const sectionDetails = {
-  home:{
-    en:[
-      'CyberAmbassador and the scholarship initiative serve different needs while sharing the same educational foundation. The first offers a complete learning and leadership journey, including assessment and community action. The second creates a shorter entry point so that more young people can access essential digital citizenship and safety knowledge before deciding whether to continue further.',
-      'Solidarity means designing with communities rather than delivering solutions from a distance. Integrity means being honest about what has been completed, what is still being tested and what remains an ambition. Excellence means treating participant feedback, including criticism, as useful evidence for improving both the content and the way it is delivered.',
-      'Sykoti is carried by a combination of organisational leadership, technical contributors, mentors, facilitators and young participants. Youth are not presented only as beneficiaries: they question the programme, test the learning experience, create projects and help translate knowledge into language and examples that make sense within their own communities.',
-      'Our articles and insights extend the learning beyond scheduled programme activities. They capture questions raised during workshops, explain recurring online risks in accessible language and document lessons from implementation. This creates a public knowledge base that educators, young people and community organisations can revisit when they need practical guidance.',
-      'Partnership makes it possible to reach more young people without reducing the quality of support. Schools, civil-society organisations, technology professionals and funders can contribute through delivery spaces, expertise, devices, connectivity, mentorship or direct programme support. Every collaboration begins with a shared understanding of the audience and the intended result.',
-    ],
-    fr:[
-      'CyberAmbassador et l’initiative de bourses répondent à des besoins différents tout en partageant une même base pédagogique. Le premier propose un parcours complet avec évaluations et action communautaire. La seconde crée une porte d’entrée plus courte afin que davantage de jeunes accèdent aux connaissances essentielles avant de choisir une progression plus approfondie.',
-      'La solidarité signifie concevoir avec les communautés plutôt que proposer des solutions à distance. L’intégrité consiste à distinguer ce qui est réalisé, ce qui est encore testé et ce qui reste une ambition. L’excellence implique de considérer les retours des participants, y compris les critiques, comme des éléments utiles pour améliorer le contenu et sa mise en œuvre.',
-      'Sykoti repose sur une combinaison de responsables associatifs, contributeurs techniques, mentors, facilitateurs et jeunes participants. Les jeunes ne sont pas seulement bénéficiaires : ils questionnent le programme, testent l’expérience, créent des projets et aident à traduire les connaissances dans des mots et exemples adaptés à leurs communautés.',
-      'Nos articles prolongent l’apprentissage au-delà des activités programmées. Ils reprennent les questions posées pendant les ateliers, expliquent les risques récurrents dans un langage accessible et documentent les leçons de mise en œuvre. Ils forment ainsi une base de connaissances publique pour les jeunes, éducateurs et organisations communautaires.',
-      'Les partenariats permettent de toucher davantage de jeunes sans réduire la qualité de l’accompagnement. Écoles, organisations de la société civile, professionnels de la technologie et partenaires financiers peuvent contribuer par des espaces, de l’expertise, des équipements, de la connexion, du mentorat ou un soutien direct aux programmes.',
-    ],
-  },
-  about:{
-    en:[
-      'The organisation emerged from challenges that reinforce one another: online risks grow as connectivity expands, practical STEM opportunities remain uneven, and many young people have ideas without access to mentorship or a structured path for developing them. Sykoti addresses these issues together because safety, skill and agency are closely connected.',
-      'Our current work is intentionally concrete: structured learning modules, youth cohorts, scholarships, workshops and community projects. Our longer-term vision is broader, but we do not present future intentions as completed achievements. Growth will depend on verified learning, durable partnerships and the ability to adapt programmes without losing their purpose.',
-      'Listening comes before curriculum design. Learning then provides concepts and vocabulary; practice helps participants make decisions in realistic situations; multiplication turns individual understanding into peer support and local action. This cycle also sends new feedback to the programme team, making the method iterative rather than fixed.',
-      'Our primary audience is young people across different backgrounds and levels of experience. Particular attention is given to girls and young women because they often face additional barriers in technology learning and leadership, but Sykoti is not a women-only organisation. Educators, community groups and grassroots innovators are important multipliers of youth impact.',
-      'Working bilingually is not limited to translating a headline or navigation menu. It requires adapting explanations, examples, facilitation and support so that participants can ask questions and express uncertainty in the language they understand best. We continue improving language parity as programmes and resources develop.',
-      'Leadership at Sykoti includes governance, programme stewardship, technical contribution and community representation. The wider community includes mentors, facilitators, youth fellows and partner organisations. Profiles are published progressively as roles, consent and biographical information are confirmed.',
-    ],
-    fr:[
-      'L’association est née de défis qui se renforcent mutuellement : les risques en ligne augmentent avec la connectivité, les occasions de pratiquer les STIM restent inégales et de nombreux jeunes ont des idées sans mentorat ni parcours structuré. Sykoti traite ces enjeux ensemble, car sécurité, compétences et pouvoir d’agir sont étroitement liés.',
-      'Nos actions actuelles sont volontairement concrètes : modules structurés, cohortes de jeunes, bourses, ateliers et projets communautaires. Notre vision à long terme est plus large, mais nous ne présentons pas les intentions futures comme des réalisations. La croissance reposera sur des apprentissages vérifiés et des partenariats durables.',
-      'L’écoute précède la conception pédagogique. L’apprentissage fournit ensuite concepts et vocabulaire ; la pratique aide à décider dans des situations réalistes ; la multiplication transforme la compréhension individuelle en soutien entre pairs et action locale. Les retours ainsi obtenus nourrissent à nouveau le programme.',
-      'Notre public principal est la jeunesse, dans toute sa diversité. Une attention particulière est accordée aux filles et jeunes femmes, qui rencontrent souvent des obstacles supplémentaires dans l’accès aux technologies et au leadership, mais Sykoti n’est pas une organisation réservée aux femmes. Les éducateurs et groupes communautaires jouent aussi un rôle multiplicateur.',
-      'Le bilinguisme ne se limite pas à traduire un titre ou un menu. Il suppose d’adapter les explications, exemples, activités et formes d’accompagnement afin que les participants puissent poser leurs questions dans la langue qu’ils maîtrisent le mieux. Nous améliorons progressivement cette parité linguistique.',
-      'Le leadership de Sykoti associe gouvernance, conduite des programmes, contribution technique et représentation communautaire. La communauté élargie comprend mentors, facilitateurs, jeunes participants et organisations partenaires. Les profils sont publiés progressivement, selon la confirmation des rôles et le consentement des personnes.',
-    ],
-  },
-  programs:{
-    en:[
-      'The programme portfolio is deliberately focused. Numbers such as modules, languages and pathways describe the structure of the learning experience rather than marketing claims. Each programme has a defined audience, expected progression and level of support so participants understand what they are joining and what completion requires.',
-      'CyberAmbassador moves from understanding digital environments to personal safety, information investigation and responsible leadership. Learners use a dedicated platform, complete practical missions and receive human follow-up. The title of CyberAmbassador is connected to successful completion rather than registration alone.',
-      'The scholarship initiative broadens access to the first part of the learning pathway through a shorter bilingual format. It is valuable in its own right but does not automatically confer CyberAmbassador status. Participants who want to continue can use the experience as preparation for more complete future cohorts.',
-      'Workshops respond to specific community needs and can be delivered with schools, youth organisations or local groups. Topics may include STEM discovery, account safety, scams, media verification, responsible artificial intelligence and digital wellbeing. Short formats are documented but are not confused with completion of a full programme.',
-      'Images from workshops, platform activities, collaborative sessions and graduation help show the programme as a lived experience. They complement quantitative data by documenting how young people participate, ask questions and work together, while respecting consent and avoiding exaggerated claims about results.',
-      'Prospective participants, mentors, schools and partners enter through different pathways. A short initial conversation helps determine the relevant programme, timing, audience, language and support needs. This prevents generic registration forms from creating expectations that the current programme cycle cannot meet.',
-    ],
-    fr:[
-      'Le portefeuille de programmes reste volontairement ciblé. Les nombres de modules, langues et parcours décrivent la structure de l’apprentissage, et non des promesses marketing. Chaque programme possède un public, une progression attendue et un niveau d’accompagnement définis afin que les participants comprennent clairement leur engagement.',
-      'CyberAmbassador progresse de la compréhension des environnements numériques vers la sécurité personnelle, l’analyse de l’information et le leadership responsable. Les apprenants utilisent une plateforme dédiée, réalisent des missions pratiques et bénéficient d’un suivi humain. Le titre est lié à la réussite du parcours, pas à une simple inscription.',
-      'L’initiative de bourses élargit l’accès à la première partie du parcours dans un format bilingue plus court. Elle est utile en elle-même, mais ne donne pas automatiquement le titre de CyberAmbassadeur. Les participants souhaitant poursuivre peuvent s’en servir comme préparation à de futures cohortes complètes.',
-      'Les ateliers répondent à des besoins précis et peuvent être organisés avec des écoles, associations de jeunes ou groupes locaux. Les thèmes incluent découverte des STIM, sécurité des comptes, arnaques, vérification de l’information, usage responsable de l’IA et bien-être numérique. Ces formats courts ne sont pas confondus avec un programme complet.',
-      'Les images d’ateliers, activités sur plateforme, sessions collaboratives et remises de certificats montrent le programme comme une expérience vécue. Elles complètent les chiffres en documentant la participation, les questions et le travail collectif, dans le respect du consentement et sans exagération des résultats.',
-      'Participants, mentors, écoles et partenaires suivent des voies d’entrée différentes. Un premier échange permet d’identifier le programme, le calendrier, le public, la langue et les besoins d’accompagnement. Cela évite qu’un formulaire générique crée des attentes incompatibles avec le cycle en cours.',
-    ],
-  },
-  impact:{
-    en:[
-      'Our current footprint is rooted in Cameroonian communities and supported by digital tools that can connect participants beyond one location. Regional ambition does not mean claiming activity where none has occurred. Expansion will be documented progressively through named programmes, partners and verified delivery evidence.',
-      'Youth-led projects are where learning becomes visible action. Topics range from account protection and misinformation to privacy and healthier social-media habits. The projects differ in scale, and their value lies in applying learning to a recognisable need rather than in presenting every activity as a large or permanent intervention.',
-      'Participant testimony adds context to figures by showing what felt useful, difficult or unclear. We retain both positive comments and constructive criticism because language complexity, limited choices or insufficient support can reveal where programme design needs to change.',
-      'Achievements describe work that has already been delivered and documented. Ambitions describe the direction we hope to pursue with sufficient learning, partnerships and resources. Keeping these categories separate protects the credibility of the organisation and gives partners a realistic basis for deciding how they can contribute.',
-      'Our reporting method avoids adding overlapping participation figures as if every entry represented a unique person. It also distinguishes completion from attendance and short-term learning from longer-term behavioural change. More detailed definitions and source notes are available for partners who need to review the evidence.',
-    ],
-    fr:[
-      'Notre empreinte actuelle est ancrée dans des communautés camerounaises et soutenue par des outils numériques permettant de relier des participants au-delà d’un seul lieu. Une ambition régionale ne signifie pas revendiquer des actions inexistantes. L’expansion sera documentée progressivement à travers des programmes, partenaires et preuves de mise en œuvre identifiés.',
-      'Les projets portés par les jeunes rendent l’apprentissage visible dans l’action. Ils abordent la protection des comptes, la désinformation, la vie privée ou de meilleurs usages des réseaux sociaux. Leur échelle varie et leur valeur vient de l’application des acquis à un besoin réel, sans présenter chaque activité comme une intervention permanente.',
-      'Les témoignages donnent du contexte aux chiffres en montrant ce qui a été utile, difficile ou peu clair. Nous conservons les appréciations positives comme les critiques constructives, car la complexité du langage, le manque de choix ou un accompagnement insuffisant révèlent les améliorations nécessaires.',
-      'Les réalisations décrivent les actions déjà menées et documentées. Les ambitions indiquent la direction souhaitée avec suffisamment d’apprentissages, de partenaires et de ressources. Maintenir cette distinction protège la crédibilité de l’association et donne aux partenaires une base réaliste pour envisager leur contribution.',
-      'Notre méthode évite d’additionner des chiffres de participation qui se recoupent comme s’il s’agissait toujours de personnes uniques. Elle distingue également présence, complétion, apprentissage à court terme et changement durable. Des définitions et notes de source plus détaillées sont disponibles pour les partenaires.',
-    ],
-  },
-  resources:{
-    en:[
-      'Topics are organised around recurring needs identified through participant questions and programme delivery. Readers can move between foundational digital safety, practical STEM, information literacy and youth leadership without needing specialist knowledge. Future filtering will follow the same clear categories.',
-      'Featured pieces provide more context than short tips. They connect a practical question to examples from workshops or learning modules, explain why the issue matters and suggest actions that readers can adapt. They also identify limits rather than implying that one checklist can solve every situation.',
-      'Recent articles are written for reuse in classrooms, youth groups and everyday conversations. Each piece focuses on a manageable question and points toward practical decisions. Where a topic involves serious harm, legal responsibilities or specialist support, the resource makes those boundaries clear.',
-      'The Civic Tech Dispatch is intended as an occasional, useful update rather than a high-volume marketing newsletter. Subscribers receive new guides, programme notes, open opportunities and evidence releases. Email addresses are used only for the requested communication and can be removed on request.',
-      'Useful knowledge also comes from practitioners, educators and community members outside Sykoti. Guest case studies should describe a real situation, the response attempted, what was learned and any limits or unresolved questions. Submissions are reviewed for relevance, consent and responsible representation.',
-    ],
-    fr:[
-      'Les thèmes sont organisés autour de besoins récurrents identifiés dans les questions des participants et la mise en œuvre des programmes. Les lecteurs peuvent passer de la sécurité numérique aux STIM pratiques, à l’éducation aux médias et au leadership des jeunes sans disposer de connaissances spécialisées.',
-      'Les contenus à la une apportent davantage de contexte que de simples listes de conseils. Ils relient une question pratique aux exemples des ateliers ou modules, expliquent l’enjeu et proposent des actions adaptables. Ils indiquent aussi leurs limites plutôt que de prétendre qu’une seule méthode résout toutes les situations.',
-      'Les articles récents sont pensés pour être réutilisés en classe, dans les groupes de jeunes et les conversations quotidiennes. Chaque contenu traite une question précise et conduit vers des décisions concrètes. Lorsque le sujet exige une aide spécialisée ou implique des risques graves, ces limites sont clairement indiquées.',
-      'Le Bulletin Tech civique est conçu comme une mise à jour occasionnelle et utile, et non comme une campagne marketing fréquente. Les abonnés reçoivent guides, nouvelles des programmes, opportunités et publications de résultats. Les adresses sont utilisées uniquement pour la communication demandée.',
-      'Les connaissances utiles viennent aussi de praticiens, éducateurs et membres de communautés extérieurs à Sykoti. Les études de cas invitées doivent décrire une situation réelle, la réponse essayée, les apprentissages et les questions restantes. Les propositions sont examinées pour leur pertinence et le respect du consentement.',
-    ],
-  },
-  'get-involved':{
-    en:[
-      'Financial support can cover participant access, workshop delivery, cohort support or longer-term programme development. Suggested contribution levels illustrate the types of cost involved but do not replace a tailored budget. Institutional sponsors receive a clear description of the activity, audience, expected outputs and reporting approach before commitment.',
-      'Transparency begins before funding is received. We clarify the intended use, delivery period, safeguarding responsibilities and evidence that can realistically be collected. Public recognition is agreed with the contributor and never takes priority over participant privacy or programme integrity.',
-      'Non-financial contributors can mentor learners, facilitate sessions, review learning materials, support technical tools or host activities. Each role requires a defined scope and appropriate conduct. Volunteers working directly with young people follow safeguarding expectations and receive the information necessary for their specific responsibility.',
-      'Partnership is based on shared purpose rather than logo collection. Schools, youth groups, civil-society organisations and technology actors can offer complementary strengths, including trusted local access, subject expertise, infrastructure and follow-up. Testimonials and partner references are published only with confirmation and consent.',
-      'An expression of interest is the beginning of a conversation, not an automatic acceptance into a programme or partnership. Tell us who you are, the audience you hope to support, your preferred contribution and relevant timing. The team will respond with the most suitable next step based on current capacity.',
-    ],
-    fr:[
-      'Le soutien financier peut couvrir l’accès des participants, l’organisation d’ateliers, l’accompagnement d’une cohorte ou le développement à plus long terme. Les niveaux proposés illustrent les types de coûts sans remplacer un budget adapté. Les partenaires reçoivent une description claire de l’activité, du public, des livrables et du suivi avant tout engagement.',
-      'La transparence commence avant la réception des fonds. Nous précisons l’usage prévu, la période de mise en œuvre, les responsabilités de protection et les preuves pouvant être collectées de manière réaliste. La visibilité publique est décidée avec le contributeur et ne passe jamais avant la vie privée des participants.',
-      'Les contributeurs non financiers peuvent accompagner des apprenants, faciliter des sessions, relire les supports, soutenir les outils techniques ou accueillir des activités. Chaque rôle possède un périmètre défini et des règles de conduite adaptées. Les bénévoles au contact des jeunes respectent les exigences de protection.',
-      'Le partenariat repose sur une mission partagée, et non sur une simple accumulation de logos. Écoles, groupes de jeunes, organisations de la société civile et acteurs technologiques apportent des forces complémentaires : accès local, expertise, infrastructure et suivi. Les références sont publiées uniquement après confirmation et consentement.',
-      'Une manifestation d’intérêt ouvre une conversation ; elle ne constitue pas une admission automatique dans un programme ou un partenariat. Présentez votre organisation, le public visé, la contribution souhaitée et le calendrier. L’équipe proposera l’étape suivante la plus adaptée aux capacités actuelles.',
-    ],
-  },
-  reports:{
-    en:[
-      'The document set is designed for different levels of review. A short impact brief provides an accessible overview, the programme document explains the learning model, and the data note records definitions and interpretation limits. Together they allow readers to understand both the work and the basis of its public claims.',
-      'The report follows a clear sequence: organisational context, programme design, participant pathways, delivered activities, available evidence, governance considerations and next steps. This structure helps readers distinguish programme description from results and future intentions from completed work.',
-      'Resource-allocation information explains the main categories required to deliver responsible youth programmes. Learning delivery includes facilitation and participant support; access covers tools and connectivity; community action supports practical projects; operations include coordination, safeguarding, monitoring and reporting.',
-      'Partners conducting due diligence or researchers asking more detailed questions can request supporting information. Access depends on privacy, consent and the sensitivity of participant data. We share aggregated or anonymised material where possible and explain clearly when a requested data set cannot be released.',
-    ],
-    fr:[
-      'L’ensemble documentaire répond à plusieurs niveaux de lecture. Une note d’impact courte offre une vue accessible, la présentation du programme explique le modèle pédagogique et la note méthodologique précise les définitions et limites d’interprétation. Ensemble, elles permettent de comprendre l’action et la base des affirmations publiques.',
-      'Le rapport suit une séquence claire : contexte associatif, conception des programmes, parcours des participants, activités menées, preuves disponibles, gouvernance et prochaines étapes. Cette structure aide à distinguer la description du programme de ses résultats, et les intentions futures des actions achevées.',
-      'Les informations sur les ressources expliquent les principales catégories nécessaires à des programmes jeunesse responsables. La formation comprend facilitation et suivi ; l’accès couvre outils et connexion ; l’action communautaire soutient les projets ; le fonctionnement inclut coordination, protection, suivi et reporting.',
-      'Les partenaires réalisant une vérification ou les chercheurs ayant des questions détaillées peuvent demander des informations complémentaires. L’accès dépend de la vie privée, du consentement et de la sensibilité des données. Nous privilégions les éléments agrégés ou anonymisés et expliquons les limites de partage.',
-    ],
-  },
+function cmsImage(page, cms, fallback) {
+  const founder = cms.team.find((member) => member.founder && member.photoUrl)
+  const media = cms.media.find((item) => item.url)
+  const candidate = page === 'about' ? founder?.photoUrl : page === 'resources' ? cms.articles[0]?.coverUrl : page === 'reports' ? cms.reports[0]?.coverUrl : page === 'programs' ? cms.programs[0]?.coverUrl : media?.url
+  return publicAsset(candidate) || fallback
 }
 
-const pagePaths={home:'',about:'about',programs:'programs',impact:'impact',resources:'resources','get-involved':'get-involved',reports:'reports',contact:'contact',cyberambassador:'cyberambassador-program'}
-const API=import.meta.env.VITE_API_URL||(['localhost','127.0.0.1'].includes(window.location.hostname)?'http://localhost:4001/api':`${window.location.origin}/api`)
-const apiOrigin=API.replace(/\/api$/,'')
-function publicAsset(url){if(!url)return '';if(/^https?:\/\//.test(url)||url.startsWith(import.meta.env.BASE_URL))return url;if(url.startsWith('/uploads/'))return `${apiOrigin}${url}`;return `${import.meta.env.BASE_URL}${url.replace(/^\//,'')}`}
-function useCmsData(){const[data,setData]=useState({team:[],articles:[],programs:[],reports:[],media:[]});useEffect(()=>{let active=true;Promise.all([fetch(`${API}/team`).then(r=>r.ok?r.json():[]),fetch(`${API}/articles`).then(r=>r.ok?r.json():[]),fetch(`${API}/programs`).then(r=>r.ok?r.json():[]),fetch(`${API}/reports`).then(r=>r.ok?r.json():[]),fetch(`${API}/cyberambassador/content`).then(r=>r.ok?r.json():{})]).then(([team,articles,programs,reports,cyber])=>{if(active)setData({team,articles,programs,reports,media:cyber.media||[]})}).catch(()=>{});return()=>{active=false}},[]);return data}
-function cmsCards(page,index,section,cms){if((page==='home'&&index===2)||(page==='about'&&index===5)){if(cms.team.length)return cms.team.slice(0,6).map(member=>[member.name,member.biography||member.role,null,member.photoUrl])}if(page==='resources'&&index===2&&cms.articles.length)return cms.articles.slice(0,4).map(article=>[article.title,article.excerpt,`article:${article.slug}`,article.coverUrl]);if(page==='programs'&&index===1&&cms.programs.length)return cms.programs.slice(0,3).map(program=>[program.title,program.description||program.summary,program.slug==='cyberambassador'?'cyberambassador':null,program.coverUrl]);if(page==='reports'&&index===0&&cms.reports.length)return cms.reports.slice(0,4).map(report=>[report.title,report.description,report.fileUrl?publicAsset(report.fileUrl):null,report.coverUrl]);return section.cards}
-function cmsImage(page,cms,fallback){const founder=cms.team.find(member=>member.founder&&member.photoUrl);const media=cms.media.find(item=>item.url);const candidate=page==='about'?founder?.photoUrl:page==='resources'?cms.articles[0]?.coverUrl:page==='reports'?cms.reports[0]?.coverUrl:page==='programs'?cms.programs[0]?.coverUrl:media?.url;return publicAsset(candidate)||fallback}
-function go(page){if(page.startsWith('mailto:')||/^https?:\/\//.test(page)){window.location.href=page;return}if(page.startsWith('article:')){history.pushState({},'',`${import.meta.env.BASE_URL}articles/${page.slice(8)}`);dispatchEvent(new PopStateEvent('popstate'));return}if(page==='scholarship'){window.location.href=`${import.meta.env.BASE_URL}scholarship/`;return}if(page==='about-team'){history.pushState({},'',`${import.meta.env.BASE_URL}about#team`);dispatchEvent(new PopStateEvent('popstate'));return}const path=pagePaths[page];if(path===undefined)return;history.pushState({},'',`${import.meta.env.BASE_URL}${path}`);dispatchEvent(new PopStateEvent('popstate'))}
-function Button({action,children,secondary=false}){return <button className={`rd-button${secondary?' secondary':''}`} onClick={()=>go(action)}>{children}<span className="material-symbols-outlined">arrow_forward</span></button>}
+function heroImage(page, data, cms) {
+  if (data.custom.hero) return mediaPath(data.custom.hero)
+  return cmsImage(page, cms, mediaPath(data.shared.images.hero))
+}
 
-function Header({lang,setLang}){const t=copy[lang],[open,setOpen]=useState(false);return <header className="rd-header"><div className="rd-wide rd-nav"><button className="rd-brand" onClick={()=>go('home')}><img src={`${import.meta.env.BASE_URL}img/logo.png`} alt="Sykoti Center"/><span><strong>Sykoti Center</strong><small>{t.civic}</small></span></button><nav className={open?'open':''}>{t.nav.map(([label,page])=><button key={page} onClick={()=>{go(page);setOpen(false)}}>{label}</button>)}<button className="rd-mobile-cta" onClick={()=>go('get-involved')}>{t.involved}</button></nav><div className="rd-tools"><div className="rd-lang"><button className={lang==='en'?'active':''} onClick={()=>setLang('en')}>EN</button><button className={lang==='fr'?'active':''} onClick={()=>setLang('fr')}>FR</button></div><button className="rd-header-cta" onClick={()=>go('get-involved')}>{t.involved}</button><button className="rd-menu" aria-label="Menu" onClick={()=>setOpen(!open)}><span className="material-symbols-outlined">menu</span></button></div></div></header>}
-function Footer({lang}){const t=copy[lang];return <footer className="rd-footer"><div className="rd-wide rd-footer-grid"><div className="rd-footer-about"><div className="rd-footer-brand"><img src={`${import.meta.env.BASE_URL}img/logo.png`} alt=""/><strong>Sykoti Center</strong></div><p>{t.footerIntro}</p><span>Cameroun · FR/EN</span></div><div><h3>{t.focus}</h3>{t.focusLinks.map(label=><a key={label} onClick={()=>go('programs')}>{label}</a>)}</div><div><h3>{t.explore}</h3>{t.nav.slice(1).map(([label,page])=><a key={page} onClick={()=>go(page)}>{label}</a>)}<a onClick={()=>go('reports')}>{t.reports}</a></div><div><h3>{t.contact}</h3><p>Bafoussam, Cameroun</p><a href="mailto:contact@sykoticenter.com">contact@sykoticenter.com</a><a onClick={()=>go('get-involved')}>{t.involved}</a></div></div><div className="rd-wide rd-footer-bottom"><span>© {new Date().getFullYear()} Sykoti Center. {t.rights}</span><span>{t.motto}</span></div></footer>}
-function Stats({items}){return <section className="rd-stats"><div className="rd-wide">{items.map(([value,label])=><article key={label}><strong>{value}</strong><span>{label}</span></article>)}</div></section>}
+function Header({ t, lang, setLang, page }) {
+  const [open, setOpen] = useState(false)
+  const bar = useRef(null)
+  const scrolled = useScrollProgress(bar)
+  const current = page === 'membership' ? 'get-involved' : page === 'article' ? 'resources' : page
+  return <header className={`rd-header${scrolled ? ' scrolled' : ''}`}><div className="rd-progress" ref={bar} aria-hidden="true"/><div className="rd-wide rd-nav">
+    <button className="rd-brand" onClick={() => go('home')}><img src={`${BASE}img/logo.png`} alt="Sykoti Center"/><span><strong>Sykoti Center</strong><small>{t.civic}</small></span></button>
+    <nav className={open ? 'open' : ''}>{t.nav.map(([label, target]) => <button key={target} className={target === current ? 'active' : ''} aria-current={target === current ? 'page' : undefined} onClick={() => { go(target); setOpen(false) }}>{label}</button>)}<button className="rd-mobile-cta" onClick={() => { go('get-involved'); setOpen(false) }}>{t.involved}</button></nav>
+    <div className="rd-tools">
+      <div className="rd-lang"><button className={lang === 'en' ? 'active' : ''} onClick={() => setLang('en')}>EN</button><button className={lang === 'fr' ? 'active' : ''} onClick={() => setLang('fr')}>FR</button></div>
+      <button className={`rd-header-cta${current === 'get-involved' ? ' active' : ''}`} onClick={() => go('get-involved')}>{t.involved}</button>
+      <button className="rd-menu" aria-label="Menu" aria-expanded={open} onClick={() => setOpen(!open)}><span className="material-symbols-outlined">{open ? 'close' : 'menu'}</span></button>
+    </div>
+  </div></header>
+}
 
-function mediaPath(file){if(!file)return '';if(/^https?:\/\//.test(file)||file.startsWith('/uploads/')||file.startsWith(import.meta.env.BASE_URL))return publicAsset(file);const folder=file.endsWith('.jpeg')?'cyberambassador/media/':'cyberambassador/media/gallery/';return `${import.meta.env.BASE_URL}${folder}${file}`}
-function ExtraSections({page,lang,cms}){return <>{(extras[page]?.[lang]||[]).map((section,index)=>{const cards=cmsCards(page,index,section,cms);return <section className={`rd-extra ${section.theme||''}`} key={`${section.k}-${index}`}><div className="rd-wide"><div className="rd-extra-head"><span>{String(index+1).padStart(2,'0')}</span><h2>{section.k}</h2><p>{section.t}</p></div>{sectionDetails[page]?.[lang]?.[index]&&<p className="rd-extra-detail">{sectionDetails[page][lang][index]}</p>}{cards&&<div className={`rd-extra-grid count-${Math.min(cards.length,4)}`}>{cards.map(([title,text,action,image,role,meta])=><article key={title}>{image&&<img src={mediaPath(image)} alt=""/>}<div>{role&&<span className="rd-person-role">{role}</span>}<h3>{title}</h3><p>{text}</p>{meta&&<span className="rd-card-meta">{meta}</span>}{action&&<button onClick={()=>go(action)}>{lang==='fr'?'Découvrir':'Explore'} →</button>}</div></article>)}</div>}{section.media&&<div className="rd-media-grid">{section.media.map(file=><img key={file} src={mediaPath(file)} alt="Sykoti Center programme"/>)}</div>}{section.action&&<Button action={section.action[1]} secondary={section.theme==='banner'}>{section.action[0]}</Button>}</div></section>})}</>}
+function Footer({ t, settings }) {
+  return <footer className="rd-footer">
+    <div className="rd-wide rd-footer-grid">
+      <div className="rd-footer-about"><div className="rd-footer-brand"><img src={`${BASE}img/logo.png`} alt=""/><strong>Sykoti Center</strong></div><p>{t.footerIntro}</p><span>{t.region}</span></div>
+      <div><h3>{t.focus}</h3>{t.focusLinks.map((label) => <a key={label} href={`${BASE}programs`} onClick={(e) => { e.preventDefault(); go('programs') }}>{label}</a>)}</div>
+      <div><h3>{t.explore}</h3>{t.nav.slice(1).map(([label, page]) => <a key={page} href={`${BASE}${pagePaths[page] ?? ''}`} onClick={(e) => { e.preventDefault(); go(page) }}>{label}</a>)}<a href={`${BASE}reports`} onClick={(e) => { e.preventDefault(); go('reports') }}>{t.reports}</a></div>
+      <div><h3>{t.contact}</h3><p>{t.location}</p><a href={`mailto:${settings.email}`}>{settings.email}</a><a href={`${BASE}get-involved`} onClick={(e) => { e.preventDefault(); go('get-involved') }}>{t.involved}</a></div>
+    </div>
+    <div className="rd-wide rd-footer-bottom"><span>© {new Date().getFullYear()} Sykoti Center. {t.rights}</span><span>{t.motto}</span></div>
+  </footer>
+}
 
-function StandardPage({page,lang,cms}){const d=content[page][lang];const image={about:'graduation-group.jpg',programs:'community-action.jpg',impact:'graduation-ceremony.png',resources:'cyber-attacks-webinar.png','get-involved':'jeunes-connectes-workshop.png',reports:'fellows-2026.jpg'}[page];const fallback=`${import.meta.env.BASE_URL}cyberambassador/media/gallery/${image}`;const heroImage=cmsImage(page,cms,fallback);return <><section className={`rd-page-hero ${page==='get-involved'?'accent':''}`}><div className="rd-wide rd-page-hero-grid"><div><span className="rd-pill">{d.pill}</span><h1>{d.title}</h1><p>{d.lead}</p><div className="rd-actions">{d.primary&&<Button action={d.primary[1]}>{d.primary[0]}</Button>}{d.secondary&&<Button action={d.secondary[1]} secondary>{d.secondary[0]}</Button>}</div></div><img src={heroImage} alt={lang==='fr'?'Programme jeunesse de Sykoti Center':'Sykoti Center youth programme'}/></div></section>{d.stats&&<Stats items={d.stats}/>}<section className="rd-section"><div className="rd-wide"><div className="rd-section-head"><span>{page==='resources'?(lang==='fr'?'Connaissances':'Knowledge'):'Sykoti Center'}</span><h2>{d.section||d.feature||d.title}</h2>{d.sectionLead&&<p>{d.sectionLead}</p>}<p className="rd-section-detail">{baseDetails[page][lang]}</p></div>{d.cards&&<div className="rd-simple-grid">{d.cards.map((card,i)=><article key={card[0]}><b>0{i+1}</b><h3>{card[0]}</h3><p>{card[1]}</p>{page==='programs'&&<Button action={card[2]}>{lang==='fr'?'Découvrir':'Explore'}</Button>}{page==='reports'&&<a className="rd-text-link" href="mailto:contact@sykoticenter.com?subject=Report request">{lang==='fr'?'Demander le rapport':'Request report'} →</a>}</article>)}</div>}{d.steps&&<div className="rd-steps">{d.steps.map(step=><article key={step[0]}><b>{step[0]}</b><h3>{step[1]}</h3><p>{step[2]}</p></article>)}</div>}{d.featureText&&<div className="rd-feature-note"><h3>{d.feature}</h3><p>{d.featureText}</p></div>}</div></section>{page!=='programs'&&<ExtraSections page={page} lang={lang} cms={cms}/>}</>}
+function Stats({ items }) {
+  if (!items?.length) return null
+  return <section className="rd-stats"><div className="rd-wide">{items.map(([value, label], i) => <article key={`${label}-${i}`} style={{ '--i': i }}>
+    <span className="rd-stat-index" aria-hidden="true">{String(i + 1).padStart(2, '0')} —</span><strong><CountUp value={value}/></strong><span className="rd-stat-label">{label}</span><i className="rd-stat-bar" aria-hidden="true"/>
+  </article>)}</div></section>
+}
 
-function Home({lang,cms}){const d=content.home[lang];return <><section className="rd-home-hero"><div className="rd-wide rd-home-grid"><div><span className="rd-pill">{d.pill}</span><h1>{d.title}</h1><p>{d.lead}</p><div className="rd-actions"><Button action={d.primary[1]}>{d.primary[0]}</Button><Button action={d.secondary[1]} secondary>{d.secondary[0]}</Button></div><small>{lang==='fr'?'Initiative bilingue ancrée au Cameroun':'Bilingual initiative rooted in Cameroon'}</small></div><figure><img src={cmsImage('home',cms,`${import.meta.env.BASE_URL}cyberambassador/media/gallery/graduation-group.jpg`)} alt="Sykoti Center youth community"/><figcaption><span className="material-symbols-outlined">shield_person</span><div><strong>CyberAmbassador</strong><small>{lang==='fr'?'Apprendre · protéger · agir':'Learn · protect · lead'}</small></div></figcaption></figure></div></section><Stats items={d.stats}/><section className="rd-section"><div className="rd-wide"><div className="rd-section-head centered"><span>{lang==='fr'?'Piliers stratégiques':'Strategic pillars'}</span><h2>{d.section}</h2><p>{d.sectionLead}</p><p className="rd-section-detail">{baseDetails.home[lang]}</p></div><div className="rd-card-grid">{d.cards.map(([icon,title,text])=><article key={title}><span className="material-symbols-outlined">{icon}</span><h3>{title}</h3><p>{text}</p><button onClick={()=>go('programs')}>{lang==='fr'?'En savoir plus':'Learn more'} →</button></article>)}</div></div></section><section className="rd-feature"><div className="rd-wide rd-feature-grid"><img src={`${import.meta.env.BASE_URL}cyberambassador/media/gallery/community-action.jpg`} alt="Youth community action"/><div><span>{lang==='fr'?'Programme phare':'Flagship programme'}</span><h2>CyberAmbassador</h2><p>{lang==='fr'?'Un parcours pratique pour comprendre le numérique, se protéger, vérifier l’information et agir dans sa communauté.':'A practical pathway to understand digital life, stay safer, verify information and act in the community.'}</p><Button action="cyberambassador">{lang==='fr'?'Découvrir le programme':'Explore the programme'}</Button></div></div></section><ExtraSections page="home" lang={lang} cms={cms}/></>}
+// Endless band of topics ("Cybersecurity · Coding · …"), edited in the admin as one line.
+function Ticker({ text }) {
+  const items = String(text || '').split('·').map((item) => item.trim()).filter(Boolean)
+  if (!items.length) return null
+  const row = items.map((item, i) => <span key={`${item}-${i}`}>{item}<i>✦</i></span>)
+  return <div className="rd-ticker"><p className="rd-sr">{items.join(', ')}</p><div className="rd-ticker-track" aria-hidden="true"><div>{row}</div><div>{row}</div></div></div>
+}
 
-export default function ReferenceDocument({page}){const cms=useCmsData();const[lang,setLangState]=useState(()=>localStorage.getItem('sykotiLanguage')||'en');const setLang=value=>{setLangState(value);localStorage.setItem('sykotiLanguage',value);document.documentElement.lang=value};useEffect(()=>{document.documentElement.lang=lang;window.scrollTo(0,0)},[lang,page]);return <><div className={`reference-document reference-page-${page}`}><Header lang={lang} setLang={setLang}/><main>{page==='home'?<Home lang={lang} cms={cms}/>:<StandardPage page={page} lang={lang} cms={cms}/>}</main><Footer lang={lang}/></div>{import.meta.env.DEV&&<Agentation appName="Sykoti Center" useHashLocation/>}</>}
+// Blueprint grid behind hero sections.
+function HeroDeco() {
+  return <div className="rd-hero-deco" aria-hidden="true"><span className="rd-grid-bg"/></div>
+}
+
+const HERO_CHIPS = [['code', 'c1'], ['shield_lock', 'c2'], ['smart_toy', 'c3'], ['wifi', 'c4']]
+
+function BackToTop({ lang }) {
+  const [show, setShow] = useState(false)
+  useEffect(() => {
+    const update = () => setShow(window.scrollY > 900)
+    update()
+    window.addEventListener('scroll', update, { passive: true })
+    return () => window.removeEventListener('scroll', update)
+  }, [])
+  return <button type="button" className={`rd-top${show ? ' show' : ''}`} tabIndex={show ? 0 : -1} aria-label={lang === 'fr' ? 'Revenir en haut' : 'Back to top'} onClick={() => window.scrollTo({ top: 0, behavior: prefersReducedMotion() ? 'auto' : 'smooth' })}><span className="material-symbols-outlined">arrow_upward</span></button>
+}
+
+function ExtraSections({ sections, lang, cms }) {
+  const visible = (sections || []).filter((section) => !section.hidden)
+  return <>{visible.map((section, index) => {
+    const cards = cmsCards(section, cms)
+    return <section className={`rd-extra ${section.theme || ''}`} key={`${section.k}-${index}`}><div className="rd-wide">
+      <div className="rd-extra-head"><span>{String(index + 1).padStart(2, '0')}</span><h2>{rich(section.k)}</h2><p>{section.t}</p></div>
+      {section.detail && <p className="rd-extra-detail">{section.detail}</p>}
+      {cards?.length > 0 && <div className={`rd-extra-grid count-${Math.min(cards.length, 4)}`}>{cards.map(([title, text, action, image, role, meta], i) => <article key={`${title}-${i}`}>
+        {image && <img src={mediaPath(image)} alt={title || ''} loading="lazy"/>}
+        <div>{role && <span className="rd-person-role">{role}</span>}<h3>{title}</h3><p>{text}</p>{meta && <span className="rd-card-meta">{meta}</span>}{action && <button onClick={() => go(action)}>{lang === 'fr' ? 'Découvrir' : 'Explore'} →</button>}</div>
+      </article>)}</div>}
+      {section.media?.length > 0 && <div className="rd-media-grid">{section.media.map((file) => <img key={file} src={mediaPath(file)} alt="Sykoti Center programme" loading="lazy"/>)}</div>}
+      {section.action?.[0] && <Button action={section.action[1]} secondary={section.theme === 'banner'}>{section.action[0]}</Button>}
+    </div></section>
+  })}</>
+}
+
+function StandardPage({ page, lang, cms, data, settings }) {
+  const d = data[lang].content
+  const fr = lang === 'fr'
+  return <>
+    <section className={`rd-page-hero ${page === 'get-involved' ? 'accent' : ''}`}><HeroDeco/><div className="rd-wide rd-page-hero-grid">
+      <div><span className="rd-pill">{d.pill}</span><h1>{rich(d.title)}</h1><p>{d.lead}</p><div className="rd-actions">{d.primary?.[0] && <Button action={d.primary[1]}>{d.primary[0]}</Button>}{d.secondary?.[0] && <Button action={d.secondary[1]} secondary>{d.secondary[0]}</Button>}</div></div>
+      <img src={heroImage(page, data, cms)} alt={d.heroAlt || (fr ? 'Programme jeunesse de Sykoti Center' : 'Sykoti Center youth programme')}/>
+    </div></section>
+    <Stats items={d.stats}/>
+    <section className="rd-section"><div className="rd-wide">
+      <div className="rd-section-head"><span>{page === 'resources' ? (fr ? 'Connaissances' : 'Knowledge') : 'Sykoti Center'}</span><h2>{rich(d.section || d.feature || d.title)}</h2>{d.sectionLead && <p>{d.sectionLead}</p>}{data[lang].details && <p className="rd-section-detail">{data[lang].details}</p>}</div>
+      {d.cards?.length > 0 && <div className="rd-simple-grid">{d.cards.map((card, i) => <article key={`${card[0]}-${i}`} className={card[3] ? 'has-image' : undefined}>{card[3] && <img className="rd-card-img" src={mediaPath(card[3])} alt="" loading="lazy"/>}<b>{String(i + 1).padStart(2, '0')}</b><h3>{card[0]}</h3><p>{card[1]}</p>
+        {page === 'programs' && card[2] && <Button action={card[2]}>{fr ? 'Découvrir' : 'Explore'}</Button>}
+        {page === 'reports' && <a className="rd-text-link" href={`mailto:${settings.email}?subject=${encodeURIComponent(`Report request: ${card[0]}`)}`}>{fr ? 'Demander le rapport' : 'Request report'} →</a>}
+      </article>)}</div>}
+      {d.steps?.length > 0 && <div className="rd-steps">{d.steps.map((step, i) => <article key={`${step[0]}-${i}`}><b>{step[0]}</b><h3>{step[1]}</h3><p>{step[2]}</p></article>)}</div>}
+      {d.featureText && <div className="rd-feature-note"><h3>{d.feature}</h3><p>{d.featureText}</p></div>}
+    </div></section>
+    {page !== 'programs' && <ExtraSections sections={data[lang].extras} lang={lang} cms={cms}/>}
+  </>
+}
+
+function Home({ lang, cms, data }) {
+  const d = data[lang].content
+  const fr = lang === 'fr'
+  const feature = data.custom.feature || data.shared.images.feature
+  return <>
+    <section className="rd-home-hero"><HeroDeco/><div className="rd-wide rd-home-grid">
+      <div><span className="rd-pill">{d.pill}</span><h1>{rich(d.title)}</h1><p>{d.lead}</p>
+        <div className="rd-actions">{d.primary?.[0] && <Button action={d.primary[1]}>{d.primary[0]}</Button>}{d.secondary?.[0] && <Button action={d.secondary[1]} secondary>{d.secondary[0]}</Button>}</div>
+        {d.trust && <small>{d.trust}</small>}
+      </div>
+      <figure><img src={heroImage('home', data, cms)} alt={d.heroAlt || 'Sykoti Center youth community'}/>
+        {HERO_CHIPS.map(([icon, cls]) => <span key={icon} className={`rd-chip ${cls}`} aria-hidden="true"><span className="material-symbols-outlined">{icon}</span></span>)}
+        {d.badge?.[0] && <figcaption><span className="material-symbols-outlined">shield_person</span><div><strong>{d.badge[0]}</strong><small>{d.badge[1]}</small></div></figcaption>}
+      </figure>
+    </div></section>
+    <Ticker text={d.ticker}/>
+    <Stats items={d.stats}/>
+    <section className="rd-section"><div className="rd-wide">
+      <div className="rd-section-head centered"><span>{d.pillarsKicker}</span><h2>{rich(d.section)}</h2><p>{d.sectionLead}</p>{data[lang].details && <p className="rd-section-detail">{data[lang].details}</p>}</div>
+      <div className="rd-card-grid">{(d.cards || []).map(([icon, title, text, image], i) => <article key={`${title}-${i}`} className={image ? 'has-image' : undefined}>{image && <img className="rd-card-img" src={mediaPath(image)} alt="" loading="lazy"/>}<span className="material-symbols-outlined">{icon}</span><h3>{title}</h3><p>{text}</p><button onClick={() => go('programs')}>{d.cardButton || (fr ? 'En savoir plus' : 'Learn more')} →</button></article>)}</div>
+    </div></section>
+    <section className="rd-feature"><div className="rd-wide rd-feature-grid">
+      <figure className="rd-feature-media"><img src={mediaPath(feature)} alt={d.featureAlt || ''} loading="lazy"/>{(d.stats?.[1] || d.stats?.[0]) && <figcaption><strong><CountUp value={(d.stats[1] || d.stats[0])[0]}/></strong><span>{(d.stats[1] || d.stats[0])[1]}</span></figcaption>}</figure>
+      <div><span>{d.featureKicker}</span><h2>{rich(d.featureTitle)}</h2><p>{d.featureText}</p>{d.featureButton?.[0] && <Button action={d.featureButton[1]}>{d.featureButton[0]}</Button>}</div>
+    </div></section>
+    <ExtraSections sections={data[lang].extras} lang={lang} cms={cms}/>
+  </>
+}
+
+export default function ReferenceDocument({ page, slug: initialSlug = '' }) {
+  const cms = useCmsData()
+  const site = useSiteContent()
+  const [lang, setLangState] = useState(() => { try { return localStorage.getItem('sykotiLanguage') || 'en' } catch { return 'en' } })
+  const setLang = (value) => { setLangState(value); try { localStorage.setItem('sykotiLanguage', value) } catch { /* ignore */ } document.documentElement.lang = value }
+  // Track the URL hash ourselves: "#membership" switches the Get Involved page to the
+  // membership form without changing the page, so App would not re-render on its own.
+  // The same applies to /articles/<slug>: moving between articles keeps page === 'article'.
+  const [hash, setHash] = useState(() => location.hash)
+  const [path, setPath] = useState(() => location.pathname)
+  useEffect(() => {
+    const sync = () => { setHash(location.hash); setPath(location.pathname) }
+    window.addEventListener('popstate', sync)
+    window.addEventListener('hashchange', sync)
+    return () => { window.removeEventListener('popstate', sync); window.removeEventListener('hashchange', sync) }
+  }, [])
+  const membership = page === 'membership' || (page === 'get-involved' && hash === '#membership')
+  const slug = page === 'article' ? (decodeURIComponent(path.split('/articles/')[1]?.split('/')[0] || '') || initialSlug) : ''
+  useEffect(() => { document.documentElement.lang = lang; window.scrollTo(0, 0) }, [lang, page, slug, membership])
+  const t = site.global[lang].copy
+  const settings = site.global.shared.settings
+  const data = site.pages[page === 'article' ? 'resources' : page === 'membership' ? 'get-involved' : page]
+  const root = useRef(null)
+  useScrollReveal(root)
+  // The membership application is a focused page: no site header, footer or other sections.
+  if (membership) {
+    return <div className="reference-document reference-page-membership">
+      <MembershipPage lang={lang} setLang={setLang} settings={settings}/>
+    </div>
+  }
+  // The pledge form still lives in the older App layout: switch to it through the router.
+  const openPledge = (target) => { if (target !== 'engagement') { go(target); return } history.pushState({}, '', `${BASE}engagement`); dispatchEvent(new PopStateEvent('popstate')) }
+  const content = page === 'wall' ? <WallPage navigate={openPledge}/>
+    : page === 'home' ? <Home lang={lang} cms={cms} data={data}/>
+    : page === 'resources' ? <BlogPage lang={lang} data={data} cms={cms} extras={<ExtraSections sections={data[lang].extras} lang={lang} cms={cms}/>}/>
+    : page === 'article' ? <ArticlePage slug={slug} lang={lang} data={data}/>
+    : page === 'get-involved' ? <GetInvolvedPage lang={lang} data={data} settings={settings} heroSrc={heroImage(page, data, cms)} extras={<ExtraSections sections={data[lang].extras} lang={lang} cms={cms}/>}/>
+    : <StandardPage page={page} lang={lang} cms={cms} data={data} settings={settings}/>
+  return <>
+    <div ref={root} className={`reference-document reference-page-${membership ? 'membership' : page}`}>
+      <a className="rd-skip" href="#main">{lang === 'fr' ? 'Aller au contenu' : 'Skip to content'}</a>
+      <Header t={t} lang={lang} setLang={setLang} page={membership ? 'membership' : page}/>
+      <main id="main" key={`${page}-${slug}-${membership}`} className="rd-main">{content}</main>
+      <Footer t={t} settings={settings}/>
+      <BackToTop lang={lang}/>
+    </div>
+    {import.meta.env.DEV && <Agentation appName="Sykoti Center" useHashLocation/>}
+  </>
+}

@@ -8,6 +8,15 @@ import Webinar from '../models/Webinar.js'
 import Engagement, { ENGAGEMENT_AGE_RANGES, ENGAGEMENT_THEMES } from '../models/Engagement.js'
 import ScholarshipApplication from '../models/ScholarshipApplication.js'
 import GuardianVoiceApplication from '../models/GuardianVoiceApplication.js'
+import M1Evaluation from '../models/M1Evaluation.js'
+import CyberambassadorContent from '../models/CyberambassadorContent.js'
+import Program from '../models/Program.js'
+import ProgramCohort from '../models/ProgramCohort.js'
+import ProgramActivity from '../models/ProgramActivity.js'
+import TeamMember from '../models/TeamMember.js'
+import ContactMessage from '../models/ContactMessage.js'
+import SiteContent from '../models/SiteContent.js'
+import MembershipApplication from '../models/MembershipApplication.js'
 
 const router = express.Router()
 const upload = multer({ dest: 'server/uploads/' })
@@ -19,6 +28,23 @@ const CYBERCOMP_TEST_EMAILS = new Set([
 ])
 const engagementSubmissions = new Map()
 const guardianVoiceSubmissions = new Map()
+const m1EvaluationSubmissions = new Map()
+const supportSubmissions = new Map()
+const membershipSubmissions = new Map()
+const MEMBERSHIP_COHORT = String(new Date().getFullYear())
+const CV_TYPES = ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document']
+const cvUpload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 4 * 1024 * 1024, files: 1, fields: 5, fieldSize: 64 * 1024 },
+  fileFilter(_req, file, callback) {
+    if (CV_TYPES.includes(file.mimetype)) return callback(null, true)
+    const error = new Error('CV: PDF or Word documents only.')
+    error.status = 400
+    return callback(error)
+  },
+})
+const listOf = (value, max = 12) => (Array.isArray(value) ? value : []).map((item) => text(item).slice(0, 120)).filter(Boolean).slice(0, max)
+const SUPPORT_TYPES = ['volunteer', 'donation', 'partnership', 'in-kind', 'other']
 
 const GUARDIAN_VOICE_PLATFORMS = ['TikTok', 'Facebook', 'Instagram', 'LinkedIn', 'YouTube', 'X', 'Other']
 const GUARDIAN_VOICE_OCCUPATIONS = ['Student', 'Professional', 'Entrepreneur', 'Content Creator', 'Other']
@@ -139,6 +165,51 @@ router.post('/scholarship/applications', asyncRoute(async (req, res) => {
   if (await ScholarshipApplication.findOne({ email, cohort: 'scholarship-2026' })) return res.status(409).json({ message: 'An application has already been submitted with this email address.' })
   const application = await ScholarshipApplication.create({ ...body, country: String(body.country || '').trim(), email, age, dateOfBirth: birthDate, cohort: 'scholarship-2026', status: 'new' })
   res.status(201).json({ id: application._id })
+}))
+
+router.post('/m1-evaluation', asyncRoute(async (req, res) => {
+  const body = req.body || {}
+  if (body.website) return res.status(201).json({ received: true })
+
+  const ip = req.ip || req.socket?.remoteAddress || 'unknown'
+  const now = Date.now()
+  const recent = (m1EvaluationSubmissions.get(ip) || []).filter((time) => now - time < 15 * 60 * 1000)
+  if (recent.length >= 6) return res.status(429).json({ message: 'Trop de tentatives. Réessaie dans quelques minutes.' })
+  m1EvaluationSubmissions.set(ip, [...recent, now])
+
+  const participantCode = text(body.participantCode).toUpperCase()
+  const fullName = text(body.fullName)
+  const email = text(body.email).toLowerCase()
+  const city = text(body.city)
+  const cohort = text(body.cohort) || 'CyberA-Rise'
+  const completionDate = new Date(body.completionDate)
+  const newPractices = Array.isArray(body.newPractices) ? [...new Set(body.newPractices.map(text).filter(Boolean))].slice(0, 8) : []
+  const newPracticeAdopted = body.newPracticeAdopted
+  const voluntaryActionTaken = body.voluntaryActionTaken
+  const riskActionTaken = body.riskActionTaken
+
+  if (participantCode.length < 2 || participantCode.length > 80) return res.status(400).json({ message: 'Le code participant est requis.' })
+  if (fullName.length < 2 || fullName.length > 120) return res.status(400).json({ message: 'Indique ton nom complet.' })
+  if (email && (!/^\S+@\S+\.\S+$/.test(email) || email.length > 180)) return res.status(400).json({ message: 'Indique une adresse e-mail valide.' })
+  if (!city || city.length > 120) return res.status(400).json({ message: 'La ville est requise.' })
+  if (Number.isNaN(completionDate.getTime())) return res.status(400).json({ message: 'Indique une date de fin valide.' })
+  if (![newPracticeAdopted, voluntaryActionTaken, riskActionTaken].every((value) => typeof value === 'boolean')) return res.status(400).json({ message: 'Réponds aux trois questions principales.' })
+  if (newPracticeAdopted && !newPractices.length && text(body.practiceExample).length < 5) return res.status(400).json({ message: 'Décris au moins une nouvelle pratique adoptée.' })
+  if (voluntaryActionTaken && text(body.voluntaryActionDetails).length < 5) return res.status(400).json({ message: 'Décris ton action comme relais volontaire.' })
+  if (riskActionTaken && text(body.riskActionExample).length < 5) return res.status(400).json({ message: 'Donne un exemple de situation où tu as agi.' })
+
+  await M1Evaluation.findOneAndUpdate(
+    { participantCode, cohort },
+    {
+      participantCode, fullName, email, city, cohort, completionDate,
+      newPracticeAdopted, newPractices, practiceExample: text(body.practiceExample),
+      voluntaryActionTaken, voluntaryActionDetails: text(body.voluntaryActionDetails),
+      riskActionTaken, riskActionExample: text(body.riskActionExample),
+      maintenanceObstacle: text(body.maintenanceObstacle), contactConsent: body.contactConsent === true,
+    },
+    { upsert: true, new: true, setDefaultsOnInsert: true, runValidators: true },
+  )
+  res.status(201).json({ message: 'Merci. Ton évaluation M+1 a bien été enregistrée.' })
 }))
 
 router.post('/guardians-voice/applications', asyncRoute(async (req, res) => {
@@ -380,9 +451,58 @@ router.post('/cyberambassador/cybercomp/results', asyncRoute(async (req, res) =>
   res.json({ applicant })
 }))
 
+router.get('/site-content', asyncRoute(async (_req, res) => {
+  const docs = await SiteContent.find({}, { page: 1, shared: 1, en: 1, fr: 1, updatedAt: 1 }).lean()
+  res.set('Cache-Control', 'public, max-age=30, stale-while-revalidate=300')
+  res.json({ pages: Object.fromEntries(docs.map(({ page, shared, en, fr, updatedAt }) => [page, { shared, en, fr, updatedAt }])) })
+}))
+
 router.get('/reports', asyncRoute(async (_req, res) => {
   const reports = await Report.find({ status: 'published' }).sort({ publishedAt: -1, createdAt: -1 })
   res.json(reports)
+}))
+
+router.get('/cyberambassador/content', asyncRoute(async (_req, res) => {
+  const content = await CyberambassadorContent.findOne({ slug: 'public', status: 'published' }).lean()
+  if (!content) return res.json({ media: [], testimonials: [] })
+  res.json({
+    media: (content.media || []).filter((item) => item.url && item.alt).sort((a, b) => a.sortOrder - b.sortOrder),
+    testimonials: (content.testimonials || []).filter((item) => item.status === 'published' && item.publicationConsent).sort((a, b) => a.sortOrder - b.sortOrder),
+  })
+}))
+
+router.get('/cyberambassador/impact', asyncRoute(async (_req, res) => {
+  const [cyberCountries, cyberFields, scholarshipCountries, scholarshipSituations, scholarshipApplicationCountries] = await Promise.all([
+    CyberambassadorInscription.aggregate([{ $match: { cohort: 'pilot-2026', status: { $in: ['shortlisted', 'accepted'] }, isTestAccount: { $ne: true }, country: { $nin: ['', null] } } }, { $group: { _id: '$country', count: { $sum: 1 } } }]),
+    CyberambassadorInscription.aggregate([{ $match: { cohort: 'pilot-2026', status: { $in: ['shortlisted', 'accepted'] }, isTestAccount: { $ne: true }, fieldOfStudy: { $nin: ['', null] } } }, { $group: { _id: '$fieldOfStudy', count: { $sum: 1 } } }]),
+    ScholarshipApplication.aggregate([{ $match: { cohort: 'scholarship-2026', status: 'accepted', country: { $nin: ['', null] } } }, { $group: { _id: '$country', count: { $sum: 1 } } }]),
+    ScholarshipApplication.aggregate([{ $match: { cohort: 'scholarship-2026', status: 'accepted', currentSituation: { $nin: ['', null] } } }, { $group: { _id: '$currentSituation', count: { $sum: 1 } } }]),
+    ScholarshipApplication.aggregate([{ $match: { cohort: 'scholarship-2026', country: { $nin: ['', null] } } }, { $group: { _id: '$country', count: { $sum: 1 } } }]),
+  ])
+  const normalizeCountry = (value) => {
+    const key = String(value || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim()
+    if (['cameroun', 'cameroon'].includes(key)) return 'Cameroun'
+    if (key.includes('congo') || key === 'rdc') return 'RDC'
+    if (key.includes("cote d'ivoire") || key.includes('cote divoire')) return "Côte d’Ivoire"
+    if (key === 'senegal') return 'Sénégal'
+    if (key === 'burkina faso') return 'Burkina Faso'
+    if (key === 'benin') return 'Bénin'
+    if (key === 'guinee') return 'Guinée'
+    if (key === 'togo') return 'Togo'
+    return String(value || 'Pays non renseigné')
+  }
+  const normalizeStudy = (value) => {
+    const key = String(value || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+    if (key.includes('informat') || key.includes('cyber') || key.includes('genie logiciel') || key.includes('genie informatique') || key.includes('reseaux')) return 'Numérique, informatique & cybersécurité'
+    if (key.includes('biolog') || key.includes('biochim') || key.includes('medec') || key.includes('science')) return 'Sciences & santé'
+    if (key.includes('droit') || key.includes('psycholog') || key.includes('polit') || key.includes('education') || key.includes('langue') || key.includes('econom') || key.includes('lettres') || key.includes('management')) return 'Sciences humaines, droit & éducation'
+    return 'Autres / niveau d’étude non précisé'
+  }
+  const format = (items, normalizer = (value) => value) => Object.values(items.reduce((acc, item) => { const label = normalizer(item._id); acc[label] = { label, count: (acc[label]?.count || 0) + item.count }; return acc }, {})).sort((a, b) => b.count - a.count || a.label.localeCompare(b.label, 'fr'))
+  res.json({
+    cyberA: { acceptedCount: await CyberambassadorInscription.countDocuments({ cohort: 'pilot-2026', status: { $in: ['shortlisted', 'accepted'] }, isTestAccount: { $ne: true } }), countries: format(cyberCountries, normalizeCountry), studyDomains: format(cyberFields, normalizeStudy) },
+    scholarships: { acceptedCount: await ScholarshipApplication.countDocuments({ cohort: 'scholarship-2026', status: 'accepted' }), countries: format(scholarshipCountries, normalizeCountry), applicationCountries: format(scholarshipApplicationCountries, normalizeCountry), situations: format(scholarshipSituations) },
+  })
 }))
 
 router.post('/reports', upload.single('file'), asyncRoute(async (req, res) => {
@@ -416,6 +536,41 @@ router.get('/articles/:slug', asyncRoute(async (req, res) => {
   const article = await Article.findOne({ slug: req.params.slug, status: 'published' })
   if (!article) return res.status(404).json({ message: 'Article not found' })
   res.json(article)
+}))
+
+router.get('/programs', asyncRoute(async (_req, res) => {
+  const programs = await Program.find({ status: 'published' }).sort({ sortOrder: 1, createdAt: -1 }).lean()
+  res.json(programs)
+}))
+
+router.get('/programs/:slug', asyncRoute(async (req, res) => {
+  const program = await Program.findOne({ slug: req.params.slug, status: 'published' }).lean()
+  if (!program) return res.status(404).json({ message: 'Program not found' })
+  const [cohorts, activities] = await Promise.all([
+    ProgramCohort.find({ programSlug: req.params.slug, status: 'published' }).sort({ sortOrder: 1, year: -1 }).lean(),
+    ProgramActivity.find({ programSlug: req.params.slug, status: 'published' }).sort({ activityDate: -1, sortOrder: 1 }).lean(),
+  ])
+  res.json({ program, cohorts, activities })
+}))
+
+router.get('/team', asyncRoute(async (_req, res) => {
+  const members = await TeamMember.find({ status: 'published' }).sort({ founder: -1, sortOrder: 1, createdAt: 1 }).lean()
+  res.json(members)
+}))
+
+router.post('/contact', asyncRoute(async (req, res) => {
+  const body = req.body || {}
+  const name = text(body.name)
+  const email = text(body.email).toLowerCase()
+  const subject = text(body.subject)
+  const message = text(body.message)
+  if (name.length < 2 || name.length > 140) return res.status(400).json({ message: 'Please enter your name.' })
+  if (!/^\S+@\S+\.\S+$/.test(email) || email.length > 180) return res.status(400).json({ message: 'Please enter a valid email address.' })
+  if (subject.length < 3 || subject.length > 180) return res.status(400).json({ message: 'Please enter a subject.' })
+  if (message.length < 10 || message.length > 3000) return res.status(400).json({ message: 'Your message must contain between 10 and 3000 characters.' })
+  if (body.consent !== true) return res.status(400).json({ message: 'Please consent to being contacted about this message.' })
+  const item = await ContactMessage.create({ name, email, subject, message, consent: true })
+  res.status(201).json({ id: item._id, received: true })
 }))
 
 router.get('/webinars', asyncRoute(async (_req, res) => {
@@ -471,9 +626,87 @@ router.post('/cyberambassador/inscriptions', asyncRoute(async (req, res) => {
   res.status(201).json(inscription)
 }))
 
+// Membership application (focused form at /membership). Multipart: "payload" JSON + optional "cv" file.
+router.post('/membership/applications', cvUpload.single('cv'), asyncRoute(async (req, res) => {
+  let body
+  try { body = JSON.parse(req.body?.payload || '{}') } catch { return res.status(400).json({ message: 'Invalid form data.' }) }
+  const fr = body.lang === 'fr'
+  const msg = (en, frText) => (fr ? frText : en)
+  if (body.website) return res.status(201).json({ received: true })
+  const ip = req.ip || req.socket?.remoteAddress || 'unknown'
+  const now = Date.now()
+  const recent = (membershipSubmissions.get(ip) || []).filter((time) => now - time < 60 * 60 * 1000)
+  if (recent.length >= 5) return res.status(429).json({ message: msg('Too many attempts. Please try again later.', 'Trop de tentatives. Veuillez réessayer plus tard.') })
+
+  const fullName = text(body.fullName)
+  const email = text(body.email).toLowerCase()
+  const motivation = text(body.motivation)
+  const commitments = body.commitments || {}
+  if (fullName.length < 3 || fullName.length > 140) return res.status(400).json({ message: msg('Please enter your full name.', 'Indiquez votre nom complet.') })
+  if (!/^\S+@\S+\.\S+$/.test(email) || email.length > 180) return res.status(400).json({ message: msg('Please enter a valid email address.', 'Indiquez une adresse e-mail valide.') })
+  if (text(body.phone).length < 6) return res.status(400).json({ message: msg('Please enter a phone or WhatsApp number.', 'Indiquez un numéro de téléphone ou WhatsApp.') })
+  if (!text(body.city) || !text(body.country)) return res.status(400).json({ message: msg('Please enter your city and country.', 'Indiquez votre ville et votre pays.') })
+  if (motivation.length < 150) return res.status(400).json({ message: msg('Your motivation should be at least 150 characters.', 'Votre motivation doit contenir au moins 150 caractères.') })
+  if (!['active', 'supporting'].includes(body.memberType)) return res.status(400).json({ message: msg('Please choose a membership type.', 'Choisissez un type d’adhésion.') })
+  if (!['fee', 'statutes', 'safeguarding', 'accurate', 'dataConsent'].every((key) => commitments[key] === true)) return res.status(400).json({ message: msg('Please accept all the commitments.', 'Merci d’accepter tous les engagements.') })
+  const profileUrl = text(body.profileUrl)
+  if (profileUrl && !isWebUrl(profileUrl)) return res.status(400).json({ message: msg('The profile link must start with http:// or https://', 'Le lien de profil doit commencer par http:// ou https://') })
+  const dateOfBirth = body.dateOfBirth ? new Date(body.dateOfBirth) : undefined
+  if (dateOfBirth && (Number.isNaN(dateOfBirth.getTime()) || dateOfBirth > new Date() || dateOfBirth.getFullYear() < 1920)) return res.status(400).json({ message: msg('Invalid date of birth.', 'Date de naissance invalide.') })
+
+  const existing = await MembershipApplication.exists({ email, cohort: MEMBERSHIP_COHORT, status: { $ne: 'declined' } })
+  if (existing) return res.status(409).json({ message: msg('An application with this email has already been received this year. We will contact you.', 'Une candidature avec cette adresse e-mail a déjà été reçue cette année. Nous vous recontacterons.') })
+
+  const long = (value, max) => text(value).slice(0, max)
+  const application = await MembershipApplication.create({
+    cohort: MEMBERSHIP_COHORT, lang: fr ? 'fr' : 'en',
+    fullName, email, phone: long(body.phone, 40), dateOfBirth, gender: long(body.gender, 40),
+    city: long(body.city, 120), region: long(body.region, 120), country: long(body.country, 120),
+    occupation: long(body.occupation, 80), organization: long(body.organization, 160), fieldOfStudy: long(body.fieldOfStudy, 160), educationLevel: long(body.educationLevel, 80),
+    skills: listOf(body.skills, 20), otherSkills: long(body.otherSkills, 300), languages: listOf(body.languages, 6), profileUrl,
+    cv: req.file ? { name: req.file.originalname.slice(0, 200), contentType: req.file.mimetype, size: req.file.size, data: req.file.buffer } : undefined,
+    memberType: body.memberType, departments: listOf(body.departments, 5), availability: long(body.availability, 80), participationMode: long(body.participationMode, 80), referralSource: long(body.referralSource, 160),
+    motivation: long(motivation, 3000), experience: long(body.experience, 3000), contribution: long(body.contribution, 3000), expectations: long(body.expectations, 2000), referee: long(body.referee, 300),
+    paymentPlan: long(body.paymentPlan, 40), interviewMode: long(body.interviewMode, 40),
+    commitments: { fee: true, statutes: true, safeguarding: true, accurate: true, dataConsent: true },
+  })
+  recent.push(now)
+  membershipSubmissions.set(ip, recent)
+  res.status(201).json({ id: application._id, received: true })
+}))
+
+// Get Involved interest form. Only whitelisted fields are stored.
 router.post('/support', asyncRoute(async (req, res) => {
-  const support = await Support.create(req.body)
-  res.status(201).json(support)
+  const body = req.body || {}
+  const fr = body.lang === 'fr'
+  if (body.website) return res.status(201).json({ received: true })
+  const ip = req.ip || req.socket?.remoteAddress || 'unknown'
+  const now = Date.now()
+  const recent = (supportSubmissions.get(ip) || []).filter((time) => now - time < 10 * 60 * 1000)
+  if (recent.length >= 5) return res.status(429).json({ message: fr ? 'Trop de tentatives. Veuillez réessayer dans quelques minutes.' : 'Too many attempts. Please try again in a few minutes.' })
+
+  const name = text(body.name)
+  const email = text(body.email).toLowerCase()
+  const message = text(body.message)
+  const contributionType = SUPPORT_TYPES.includes(body.contributionType) ? body.contributionType : 'other'
+  const amount = body.amount === '' || body.amount == null ? undefined : Number(body.amount)
+  if (name.length < 2 || name.length > 140) return res.status(400).json({ message: fr ? 'Indiquez votre nom.' : 'Please enter your name.' })
+  if (!/^\S+@\S+\.\S+$/.test(email) || email.length > 180) return res.status(400).json({ message: fr ? 'Indiquez une adresse e-mail valide.' : 'Please enter a valid email address.' })
+  if (message.length < 10 || message.length > 3000) return res.status(400).json({ message: fr ? 'Votre message doit contenir entre 10 et 3000 caractères.' : 'Your message must contain between 10 and 3000 characters.' })
+  if (amount !== undefined && (!Number.isFinite(amount) || amount < 0 || amount > 1e10)) return res.status(400).json({ message: fr ? 'Montant invalide.' : 'Invalid amount.' })
+  if (body.consent !== true) return res.status(400).json({ message: fr ? 'Merci d’accepter d’être recontacté·e.' : 'Please agree to be contacted about your request.' })
+
+  const support = await Support.create({
+    name, email, message, contributionType, amount,
+    phone: text(body.phone).slice(0, 40),
+    organization: text(body.organization).slice(0, 160),
+    level: text(body.level).slice(0, 120),
+    lang: fr ? 'fr' : 'en',
+    currency: 'XAF',
+  })
+  recent.push(now)
+  supportSubmissions.set(ip, recent)
+  res.status(201).json({ id: support._id, received: true })
 }))
 
 export default router

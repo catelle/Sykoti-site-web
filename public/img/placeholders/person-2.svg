@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 700" role="img" aria-label="Portrait placeholder">
+<rect width="600" height="700" fill="#e6e8ee"/>
+<g stroke="#1c1b1c" stroke-opacity=".05" stroke-width="2"><path d="M60 0 V700"/><path d="M120 0 V700"/><path d="M180 0 V700"/><path d="M240 0 V700"/><path d="M300 0 V700"/><path d="M360 0 V700"/><path d="M420 0 V700"/><path d="M480 0 V700"/><path d="M540 0 V700"/><path d="M0 60 H600"/><path d="M0 120 H600"/><path d="M0 180 H600"/><path d="M0 240 H600"/><path d="M0 300 H600"/><path d="M0 360 H600"/><path d="M0 420 H600"/><path d="M0 480 H600"/><path d="M0 540 H600"/><path d="M0 600 H600"/><path d="M0 660 H600"/></g>
+<circle cx="300" cy="250" r="128" fill="#140e10"/>
+<path d="M70 700 C80 556 170 486 300 486 C430 486 520 556 530 700 Z" fill="#bc0050"/>
+<path d="M256 486 L300 552 L344 486 Z" fill="#e6e8ee" opacity=".9"/>
+<rect x="262" y="372" width="76" height="120" rx="30" fill="#5a3423"/>
+<ellipse cx="300" cy="290" rx="96" ry="112" fill="#5a3423"/>
+<ellipse cx="204" cy="300" rx="16" ry="24" fill="#5a3423"/><ellipse cx="396" cy="300" rx="16" ry="24" fill="#5a3423"/>
+
+</svg>

@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 700" role="img" aria-label="Portrait placeholder">
+<rect width="600" height="700" fill="#e8eaf0"/>
+<g stroke="#1c1b1c" stroke-opacity=".05" stroke-width="2"><path d="M60 0 V700"/><path d="M120 0 V700"/><path d="M180 0 V700"/><path d="M240 0 V700"/><path d="M300 0 V700"/><path d="M360 0 V700"/><path d="M420 0 V700"/><path d="M480 0 V700"/><path d="M540 0 V700"/><path d="M0 60 H600"/><path d="M0 120 H600"/><path d="M0 180 H600"/><path d="M0 240 H600"/><path d="M0 300 H600"/><path d="M0 360 H600"/><path d="M0 420 H600"/><path d="M0 480 H600"/><path d="M0 540 H600"/><path d="M0 600 H600"/><path d="M0 660 H600"/></g>
+<rect x="196" y="200" width="22" height="210" rx="11" fill="#3a2418"/><rect x="218" y="200" width="22" height="240" rx="11" fill="#3a2418"/><rect x="360" y="200" width="22" height="240" rx="11" fill="#3a2418"/><rect x="382" y="200" width="22" height="210" rx="11" fill="#3a2418"/>
+<path d="M70 700 C80 556 170 486 300 486 C430 486 520 556 530 700 Z" fill="#1f5fb4"/>
+<path d="M256 486 L300 552 L344 486 Z" fill="#e8eaf0" opacity=".9"/>
+<rect x="262" y="372" width="76" height="120" rx="30" fill="#b37a4c"/>
+<ellipse cx="300" cy="290" rx="96" ry="112" fill="#b37a4c"/>
+<ellipse cx="204" cy="300" rx="16" ry="24" fill="#b37a4c"/><ellipse cx="396" cy="300" rx="16" ry="24" fill="#b37a4c"/>
+<path d="M204 268 C200 192 250 160 300 160 C352 160 402 192 396 268 C372 230 340 214 300 214 C260 214 228 230 204 268 Z" fill="#3a2418"/>
+</svg>

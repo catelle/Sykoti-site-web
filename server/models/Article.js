@@ -8,6 +8,7 @@ const articleSchema = new mongoose.Schema(
     content: { type: String, required: true },
     category: { type: String, default: 'Digital safety' },
     coverUrl: String,
+    featured: { type: Boolean, default: false },
     author: { type: String, default: 'SykotiCenter' },
     status: { type: String, enum: ['draft', 'published', 'archived'], default: 'draft' },
     publishedAt: Date,

@@ -1,9 +1,12 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
+import { resolve } from 'path'
 
 const base = process.env.VITE_BASE_PATH || (process.env.VERCEL ? '/' : '/Sykoti-site-web/')
 
 const cleanPageRoutes = {
+  '/admin': '/admin.html',
+  '/admin/': '/admin.html',
   '/cyberambassador': '/cyberambassador/index.html',
   '/cyberambassador/': '/cyberambassador/index.html',
   '/cyberambassador/registration': '/cyberambassador/registration/index.html',
@@ -53,4 +56,12 @@ function cleanPageRoutePlugin() {
 export default defineConfig({
   plugins: [cleanPageRoutePlugin(), react()],
   base,
+  build: {
+    rollupOptions: {
+      input: {
+        main: resolve(__dirname, 'index.html'),
+        admin: resolve(__dirname, 'admin.html'),
+      },
+    },
+  },
 })

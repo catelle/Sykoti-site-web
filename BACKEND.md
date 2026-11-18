@@ -37,28 +37,29 @@ This project includes an Express + MongoDB API for managing SykotiCenter content
 
 The API runs on `http://localhost:4001` by default.
 
-## Admin Console
+## Admin Dashboard
 
-Open:
+Open `/admin` (production) or `http://localhost:5173/Sykoti-site-web/admin.html` in development.
+The dashboard is a Vite entry (`admin.html` + `src/admin/`) and requires signing in.
 
-```text
-http://localhost:5173/admin.html
-```
+It lets the admin:
 
-or the equivalent Vite dev-server URL.
-
-The admin account can manage:
-
-- Reports
-- Articles
-- Webinars
-- Cyberambassador Fellowship / platform inscriptions
-- Support pledges
+- **Page content** — edit texts, buttons, cards, images and section order of the public pages
+  (Home, About, Programmes, Impact, Resources, Get involved, Reports, header & footer) in EN and FR.
+  Defaults live in `src/content/siteDefaults.js`; only the differences are saved in the
+  `SiteContent` collection. "Restore defaults" deletes a page's overrides.
+- **Media library** — upload images/PDFs (resized in the browser to max 2000px). Files are stored
+  in MongoDB (`MediaAsset`) and served from `/uploads/media/:id`, so they survive Vercel deployments.
+- Create, edit, publish and delete articles, reports, webinars, programmes, cohorts, activities and team members.
+- Manage the CyberAmbassador gallery and testimonials.
+- Review applications (CyberAmbassador, Scholarships, Guardians Voice), engagements, contact messages and support pledges.
 
 ## Main Endpoints
 
 Public:
 
+- `GET /api/site-content` — page content overrides
+- `GET /uploads/media/:id` — uploaded files
 - `GET /api/reports`
 - `POST /api/reports`
 - `GET /api/articles`
@@ -67,6 +68,10 @@ Public:
 - `POST /api/support`
 
 Admin:
+
+- `GET /api/admin/overview` — dashboard counters
+- `GET /api/admin/site-content`, `PUT|DELETE /api/admin/site-content/:page`
+- `GET|POST /api/admin/media`, `PATCH|DELETE /api/admin/media/:id`
 
 - `POST /api/admin/login`
 - `GET /api/admin/:resource`
